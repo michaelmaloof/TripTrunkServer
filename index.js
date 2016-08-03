@@ -1,5 +1,3 @@
-// Example express application adding the parse-server module to expose Parse
-// compatible API routes.
 
 const express = require('express');
 const ParseServer = require('parse-server').ParseServer;
