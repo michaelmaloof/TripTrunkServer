@@ -11,7 +11,7 @@ var addFollowersToFriendRole = function(user) {
 
   var userRole;
 
-  var roleName = "friendsOf_" + user.id
+  var roleName = "friendsOf_" + user.id;
 
   var roleQuery = new Parse.Query(Parse.Role);
   roleQuery.equalTo("name", roleName);
