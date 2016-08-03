@@ -2,17 +2,17 @@
  * This file is just for including all of the files needed in the app.
  */
 
-require('/var/app/current/cloud/installation.js');
-require('/var/app/current/cloud/activity.js');
-require('/var/app/current/cloud/photo.js');
-require('/var/app/current/cloud/user.js');
-require('/var/app/current/cloud/report.js');
-require('/var/app/current/cloud/block.js');
-require('/var/app/current/cloud/trunk.js');
-require('/var/app/current/cloud/updateFriendRoles.js');
-require('/var/app/current/cloud/pushNotifications.js');
-require('/var/app/current/cloud/homeMapAndList.js');
-// require('/var/app/current/cloud/databaseFunctions.js');
+require('./installation.js');
+require('./activity.js');
+require('./photo.js');
+require('./user.js');
+require('./report.js');
+require('./block.js');
+require('./trunk.js');
+require('./updateFriendRoles.js');
+require('./pushNotifications.js');
+require('./homeMapAndList.js');
+// require('./databaseFunctions.js');
 
 /*
 TODO: timeouts happen on Follows.
