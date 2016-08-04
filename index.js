@@ -12,7 +12,7 @@ const api = new ParseServer({
   cloud: process.env.CLOUD_CODE_MAIN || __dirname + '/cloud/main.js',
   appId: process.env.APP_ID || 'hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI',
   masterKey: process.env.MASTER_KEY || 'YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ', // Add your master key here. Keep it secret!
-  serverURL: process.env.SERVER_URL || 'http://locahost:3000',  // Don't forget to change to https if needed
+  serverURL: process.env.SERVER_URL || 'http://localhost:3000/parse/',  // Don't forget to change to https if needed
   verbose: 0,
   filesAdapter: new S3Adapter(
     "AKIAJCTGNVYPDOHIEYNQ",
