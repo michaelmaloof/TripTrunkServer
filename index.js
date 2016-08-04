@@ -1,7 +1,7 @@
 
 const express = require('express');
 const ParseServer = require('parse-server').ParseServer;
-var S3Adapter = require('parse-server').S3Adapter;
+const S3Adapter = require('parse-server').S3Adapter;
 const path = require('path');
 
 const databaseUri = process.env.DATABASE_URI || process.env.MONGODB_URI;
@@ -15,25 +15,27 @@ const api = new ParseServer({
   serverURL: process.env.SERVER_URL || 'http://localhost:3000/parse/',  // Don't forget to change to https if needed
   verbose: 0,
   filesAdapter: new S3Adapter(
-    "AKIAJCTGNVYPDOHIEYNQ",
-    "lEebcq4gEjMPw8kYmH4lnOCBzi5PTRfS5Zpn9Oig",
-    "triptrunk",
+    'AKIAJCTGNVYPDOHIEYNQ',
+    'lEebcq4gEjMPw8kYmH4lnOCBzi5PTRfS5Zpn9Oig',
+    'triptrunk',
     {directAccess: true}
   ),
   push: {
     ios: [
       {
-        pfx: './certs/TTDevelopmentPushCertificate.p12', // Dev PFX or P12
+        pfx: './certs/TT-APNS-Dev.p12', // Dev PFX or P12
         bundleId: 'com.triptrunk.TripTrunk',
-        production: false // Dev
+        passphrase: 'TripTrunk33',
+        production: false, // Dev
       },
       {
-        pfx: './certs/TTProductionPushCertificate.p12', // Prod PFX or P12
-        bundleId: 'com.triptrunk.TripTrunk',  
-        production: true // Prod
-      }
-    ]
-  }
+        pfx: './certs/TT-APNS-Dev.p12', // Prod PFX or P12
+        bundleId: 'com.triptrunk.TripTrunk',
+        passphrase: 'TripTrunk33',
+        production: true, // Prod
+      },
+    ],
+  },
 });
 
 // Client-keys like the javascript key or the .NET key are not necessary with parse-server

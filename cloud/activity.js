@@ -643,7 +643,8 @@ Parse.Cloud.afterSave('Activity', function(request) {
         Parse.Push.send({
           where: query, // Set our Installation query.
           data: alertPayload(request)
-        }).then(function() {
+        }, { useMasterKey: true })
+        .then(function() {
           // Push was successful
           console.log("Sent push.");
         }, function(error) {
@@ -686,7 +687,7 @@ Parse.Cloud.afterSave('Activity', function(request) {
     Parse.Push.send({
       where: query, // Set our Installation query.
       data: alertPayload(request)
-    }).then(function() {
+    }, { useMasterKey: true }).then(function() {
       // Push was successful
       console.log("Sent push.");
     }, function(error) {
@@ -974,7 +975,7 @@ function sendPushNotificationForAcceptedFollowRequest(activity, request) {
       t: 'f', // Activity Type: Follow
       fu: request.user.id // From User - it's actually the toUser in this case since it's an "accepted" notificaiton.
     }
-  }).then(function() {
+  }, { useMasterKey: true }).then(function() {
     // Push was successful
     console.log('Sent push for acceptance.');
     promise.resolve();
