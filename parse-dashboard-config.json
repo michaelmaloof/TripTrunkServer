@@ -1,0 +1,18 @@
+{
+  "apps": [
+    {
+      "serverURL": "http://triptrunk-server-dev.us-east-1.elasticbeanstalk.com/parse",
+      "appId": "hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI",
+      "masterKey": "YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ",
+      "appName": "TripTrunk-Dev",
+      "production": false
+    },
+    {
+      "serverURL": "http://localhost:3000/parse",
+      "appId": "hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI",
+      "masterKey": "YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ",
+      "appName": "TripTrunk-Local",
+      "production": false
+    }
+  ]
+}

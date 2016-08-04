@@ -1,1 +1,1 @@
-parse-dashboard --appId hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI --masterKey YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ --serverURL "http://triptrunk-server-dev.us-east-1.elasticbeanstalk.com/parse" --appName TripTrunkDev
+parse-dashboard --config parse-dashboard-config.json
