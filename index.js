@@ -29,7 +29,7 @@ const api = new ParseServer({
         production: false, // Dev
       },
       {
-        pfx: './certs/TT-APNS-Dev.p12', // Prod PFX or P12
+        pfx: './certs/TT-APNS-Production.p12', // Prod PFX or P12
         bundleId: 'com.triptrunk.TripTrunk',
         passphrase: 'TripTrunk33',
         production: true, // Prod
