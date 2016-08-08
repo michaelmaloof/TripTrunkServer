@@ -758,68 +758,75 @@ var alertMessage = function(request) {
   }
 
   return message;
-}
+};
 
-var alertPayload = function(request) {
-  var payload = {};
+function alertPayload(request) {
 
-  if (request.object.get("type") === "comment") {
+  if (request.object.get('type') === 'comment') {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
-      badge: 'Increment', 
+      badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'c', // Activity Type: Comment
       fu: request.object.get('fromUser').id, // From User
-      pid: request.object.get('photo').id // Photo Id
+      pid: request.object.get('photo').id, // Photo Id
     };
-  } else if (request.object.get("type") === "mention") {
-	  return {
-        'content-available': 1,
-	alert: alertMessage(request), // Set our alert message.
-	badge: 'Increment', 
-	p: 'a', // Payload Type: Activity
-      	t: 'm', // Activity Type: Mention
-      	fu: request.object.get('fromUser').id, // From User
-		pid: request.object.get('photo').id // Photo Id
-	  };
-  } else if (request.object.get("type") === "like") {
+  }
+  else if (request.object.get('type') === 'mention') {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
+      badge: 'Increment',
+      p: 'a', // Payload Type: Activity
+      t: 'm', // Activity Type: Mention
+      fu: request.object.get('fromUser').id, // From User
+      pid: request.object.get('photo').id, // Photo Id
+    };
+  }
+  else if (request.object.get('type') === 'like') {
+    return {
+      'content-available': 1,
+      alert: alertMessage(request), // Set our alert message.
+      badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'l', // Activity Type: Like
       fu: request.object.get('fromUser').id, // From User
-      pid: request.object.get('photo').id // Photo Id
+      pid: request.object.get('photo').id, // Photo Id
     };
-  } else if (request.object.get("type") === "follow") {
+  }
+  else if (request.object.get('type') === 'follow') {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
       badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'f', // Activity Type: Follow
-      fu: request.object.get('fromUser').id // From User
+      fu: request.object.get('fromUser').id, // From User
     };
-  } else if (request.object.get("type") === "addToTrip") {
+  }
+  else if (request.object.get('type') === 'addToTrip') {
     return {
       'content-available': 1,
       alert: alertMessage(request),
       badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'a', // Activity Type: addToTrip
-      tid: request.object.get('trip').id // Trip Id
-    }
-  } else if (request.object.get("type") === "pending_follow") {
+      tid: request.object.get('trip').id, // Trip Id
+    };
+  }
+  else if (request.object.get('type') === 'pending_follow') {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
       badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'f', // Activity Type: Pending_Follow
-      fu: request.object.get('fromUser').id // From User
+      fu: request.object.get('fromUser').id, // From User
     };
   }
+
+  return {};
 }
 
 /*
