@@ -1,3 +1,10 @@
+
+
+/**
+ * TODO: 8/8/2016 - Mattschoch
+ * This isn't being included in main.js and nothing in iOS calls these...can we delete?
+ */
+
 Parse.Cloud.useMasterKey();
 
 Parse.Cloud.define("copyColumnUsernameToUsernameBack", function(request, response) {

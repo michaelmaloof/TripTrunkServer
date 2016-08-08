@@ -1,3 +1,12 @@
+/* THIS IS A HACK
+ * Because of issues grouping photosAdded notifications (Matt added 5 photos, instead of Matt added a photo, 5 times)
+ * We are just saving an object that will notifiy the server to send the notification
+ * Eventually this should be done properly and the client shouldn't get any say in sending notifications, CloudCode should handle it all.
+ *
+ * 8/8/2016 - mattschoch
+ * This is used to send a notification whenever a PushNotificaiton object is saved to parse. This lets the client create and trigger notifications to other users.
+ */
+
 const _ = require('underscore');
 
 

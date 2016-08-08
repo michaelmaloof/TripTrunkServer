@@ -1,23 +1,29 @@
+// TODO: 8/8/2016 - mattschoch
+// Blocking users is rudimentary, and it uses masterkey which may cause issues now.
+// Now that we don't have to be limited by parse timeouts, we should actually 1) unfollow users if necessary, 2) add to blocked list
+
+
 /**
  * BEFORE SAVE
  * Handles a lot of the actual logic of blocking a user - using the masterKey to force them to unfollow, etc.
  */
-Parse.Cloud.beforeSave('Block', function(request, response) {
+Parse.Cloud.beforeSave('Block', (request, response) => {
   Parse.Cloud.useMasterKey(); // User master key because we want to update the Trip's mostRecentPhoto regardless of the ACL.
-  var currentUser = request.user;
-  var blockedUser = request.object.get('blockedUser');
+  const currentUser = request.user;
+  const blockedockedUser = request.object.get('blockedUser');
 
-  if(!currentUser || !blockedUser) {
+  if (!currentUser || !blockedUser) {
     return response.error('Not a valid user when trying to Block');
-  } else if (currentUser.id === blockedUser.id) {
+  }
+  else if (currentUser.id === blockedUser.id) {
     return response.error('Cannot block yourself.');
   }
 
   // Make sure the user wasn't already blocked.
 
-  var q = new Parse.Query("Block");
-  q.equalTo("fromUser", currentUser);
-  q.equalTo("blockedUser", blockedUser);
+  const q = new Parse.Query('Block');
+  q.equalTo('fromUser', currentUser);
+  q.equalTo('blockedUser', blockedUser);
 
   q.count({
     success: function(count) {
@@ -30,18 +36,18 @@ Parse.Cloud.beforeSave('Block', function(request, response) {
        * Force the Blocked user to unfollow.
        */
       // If the blocked user is following our user, we want to force the unfollow
-      var followQuery = new Parse.Query("Activity");
-      followQuery.equalTo("fromUser", blockedUser);
-      followQuery.equalTo("toUser", currentUser);
-      followQuery.equalTo("type", "follow");
+      const followQuery = new Parse.Query('Activity');
+      followQuery.equalTo('fromUser', blockedUser);
+      followQuery.equalTo('toUser', currentUser);
+      followQuery.equalTo('type', 'follow');
 
       // If the user is following the user they want to block, we should unfollow that person
-      var followingQuery = new Parse.Query("Activity");
-      followingQuery.equalTo("fromUser", currentUser);
-      followingQuery.equalTo("toUser", blockedUser);
-      followingQuery.equalTo("type", "follow");
+      const followingQuery = new Parse.Query('Activity');
+      followingQuery.equalTo('fromUser', currentUser);
+      followingQuery.equalTo('toUser', blockedUser);
+      followingQuery.equalTo('type', 'follow');
 
-      var query = Parse.Query.or(followQuery, followingQuery);
+      const query = Parse.Query.or(followQuery, followingQuery);
       query.find({
         success: function(results) {
           Parse.Object.destroyAll(results);
@@ -49,13 +55,15 @@ Parse.Cloud.beforeSave('Block', function(request, response) {
         },
         error: function(error) {
           // ERROR unfollowing
-          response.error("Failed to unfollow");
-        }
+          response.error('Failed to unfollow');
+        },
       });
+
+      return true;
     },
     error: function(error) {
-      response.error("Failed to see if Blocked User already exists. User not blocked.");
-    }
+      response.error('Failed to see if Blocked User already exists. User not blocked.');
+    },
   });
 
 });
