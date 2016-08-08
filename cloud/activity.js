@@ -767,7 +767,7 @@ var alertPayload = function(request) {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
-      badge: 1, 
+      badge: 'Increment', 
       p: 'a', // Payload Type: Activity
       t: 'c', // Activity Type: Comment
       fu: request.object.get('fromUser').id, // From User
@@ -777,7 +777,7 @@ var alertPayload = function(request) {
 	  return {
         'content-available': 1,
 	alert: alertMessage(request), // Set our alert message.
-	badge: 1, 
+	badge: 'Increment', 
 	p: 'a', // Payload Type: Activity
       	t: 'm', // Activity Type: Mention
       	fu: request.object.get('fromUser').id, // From User
@@ -796,6 +796,7 @@ var alertPayload = function(request) {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
+      badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'f', // Activity Type: Follow
       fu: request.object.get('fromUser').id // From User
@@ -804,7 +805,7 @@ var alertPayload = function(request) {
     return {
       'content-available': 1,
       alert: alertMessage(request),
-      badge: 1,
+      badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'a', // Activity Type: addToTrip
       tid: request.object.get('trip').id // Trip Id
@@ -813,7 +814,7 @@ var alertPayload = function(request) {
     return {
       'content-available': 1,
       alert: alertMessage(request), // Set our alert message.
-      badge: 1,
+      badge: 'Increment',
       p: 'a', // Payload Type: Activity
       t: 'f', // Activity Type: Pending_Follow
       fu: request.object.get('fromUser').id // From User

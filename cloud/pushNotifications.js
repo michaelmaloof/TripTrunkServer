@@ -44,7 +44,7 @@ function sendNotification(request) {
 
   const payload = {
     alert: pushMessage, // Set our alert message.
-    // badge: 'Increment',
+    badge: 'Increment',
     p: 'p', // Payload Type: Photo
     tid: request.object.get('trip').id, // Trip Id
     pid: request.object.id, // Photo Id
