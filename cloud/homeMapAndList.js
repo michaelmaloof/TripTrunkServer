@@ -8,6 +8,7 @@ Parse.Cloud.define("queryForUniqueTrunks", function(request, response) {
 		trunks = []; //Added to clear arrays that were auto cleared on parse.com
 		trips = []; //Added to clear arrays that were auto cleared on parse.com
 		tripIds = []; //Added to clear arrays that were auto cleared on parse.com
+		friends = []; //Added to clear arrays that were auto cleared on parse.com
     	var latitude = request.params.latitude;
     	var longitude = request.params.longitude;
     	var limit = parseInt(request.params.limit);
@@ -273,6 +274,10 @@ function getTrunksForUser(limit,skip,latitude,longitude,user,callback) {
 // }
 
 Parse.Cloud.define("queryForMutualTrunks", function(request, response) {
+		trunks = []; //Added to clear arrays that were auto cleared on parse.com
+		trips = []; //Added to clear arrays that were auto cleared on parse.com
+		tripIds = []; //Added to clear arrays that were auto cleared on parse.com
+		friends = []; //Added to clear arrays that were auto cleared on parse.com
 	var limit = parseInt(request.params.limit);
     var user = request.user;
     console.log("user: "+user.Id);
