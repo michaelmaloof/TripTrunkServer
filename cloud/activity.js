@@ -298,6 +298,8 @@ Parse.Cloud.define("addToTripSprint13", function(request, response) {
       return Parse.Promise.error("User already added to trunk");
     }
 
+    console.log(trip.id);
+
     // ADD TRUNK MEMBER TO ROLE
     var roleName;
     // If an ApprovingUser is passed in
@@ -419,6 +421,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
       roleName = "trunkMembersOf_" + trip.id;
     }
     else  {
+      console.log('ERROR - NO TRIP ID');
       return Parse.Promise.error("No trip id passed so we have no Role Name");
     }
 
@@ -426,7 +429,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
     roleQuery.equalTo("name", roleName);
     console.log("Looking for role name: " + roleName);
 
-    return roleQuery.first();
+    return roleQuery.first({sessionToken: request.user.getSessionToken()});
 
   }).then(function(role) {
     console.log("Role Found: " + role);
@@ -434,7 +437,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
       role.getUsers().add(toUser);
       return role.save();
     }
-    return Parse.Promise.error("No Role found for name: " + roleName);
+    return Parse.Promise.error("No Role found");
 
   }).then(function() {
     /* SUCCESS */
