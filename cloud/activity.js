@@ -1,22 +1,23 @@
-//return number of notificatons since last logoff
-Parse.Cloud.define("queryForActivityNotifications", function(request, response) {
-    
-    var date = new Date(request.params.date);
-  	
-        var notificationQuery = new Parse.Query("Activity");
-        notificationQuery.equalTo('toUser', Parse.User.current());
-        notificationQuery.notEqualTo('fromUser', Parse.User.current());
-        notificationQuery.greaterThan('updatedAt',date);
-        
-        notificationQuery.count({
-            success: function(count) {
-            response.success(count);    
-            },
-            error:function (error) {
-                response.error(error);
-                console.log("Could not count activities: " + error.message);
-            }
-        } );
+
+
+// return number of notificatons since last logoff
+Parse.Cloud.define('queryForActivityNotifications', function(request, response) {
+
+  const date = new Date(request.params.date);
+  const query = new Parse.Query('Activity');
+  query.equalTo('toUser', request.user);
+  query.notEqualTo('fromUser', request.user);
+  query.greaterThan('createdAt', date);
+
+  query.count({
+    success: function(count) {
+      response.success(count);
+    },
+    error: function(error) {
+      response.error(error);
+      console.log('Could not count activities: ' + error.message);
+    },
+  } );
 });
 
 Parse.Cloud.define("queryForNewsFeed", function(request, response) {
@@ -610,88 +611,63 @@ Parse.Cloud.beforeSave('Activity', function(request, response) {
 Parse.Cloud.afterSave('Activity', function(request) {
   // Only send push notifications for new activities
   if (request.object.existed()) {
-	  console.log("AfterSave: Object existed");
+    console.log('AfterSave: Object existed');
     return;
   }
 
-  var toUser = request.object.get("toUser");
+  const toUser = request.object.get('toUser');
   if (!toUser) {
-    throw "Undefined toUser. Skipping push for Activity " + request.object.get("type") + " : " + request.object.id;
-    return;
+    throw new Error('Undefined toUser. Skipping push for Activity ' + request.object.get('type') + ' : ' + request.object.id);
   }
 
   // If the activity is to the user making the request (i.e. toUser and fromUser are the same), don't send a push notification
   // That happens when we add a "addToTrip" Activity for "self" to aid in querying later, so it shouldn't notify the user.
-  if (!request.object.get("toUser") || request.object.get("toUser").id === request.user.id) {
+  if (!toUser || toUser.id === request.user.id) {
     return;
-  };
+  }
 
-  var query = new Parse.Query(Parse.Installation);
-  query.equalTo("user", toUser);
-
-  var trip;
+  const query = new Parse.Query(Parse.Installation);
+  query.equalTo('user', toUser);
 
   // If it's addToTrip, we'll populate the Trip before we call the Push Notification.
   // It's redundant code, but it saves refactoring everything right now.
-  
-  if (request.object.get("type") === "addToTrip") {
-      // Check if the trunk is private or not.
-      request.object.get("trip").fetch().then(function(thisTrip) {
-        request.object.set("trip", thisTrip);
-        console.log(trip);
+  // TODO: Get rid of the duplicate Push.send blocks, refactor so we don't have the exact same code twice.
 
-        Parse.Push.send({
-          where: query, // Set our Installation query.
-          data: alertPayload(request)
-        }, { useMasterKey: true })
-        .then(function() {
-          // Push was successful
-          console.log("Sent push.");
-        }, function(error) {
-          throw "Push Error " + error.code + " : " + error.message;
-        });
+  if (request.object.get('type') === 'addToTrip') {
+    // Check if the trunk is private or not.
+    request.object.get('trip').fetch().then(function(thisTrip) {
+      request.object.set('trip', thisTrip);
 
+      Parse.Push.send({
+        where: query, // Set our Installation query.
+        data: alertPayload(request),
+      }, {
+        useMasterKey: true,
+      })
+      .then(() => {
+        // Push was successful
+        console.log('Sent push.');
+      })
+      .catch(error => {
+        throw new Error('Push Error ' + error.code + ' : ' + error.message);
       });
+
+    });
   }
-  // else if (request.object.get("type") === "like") {
-//
-// 	  var likedTrip;
-// 	  var tripDetail;
-//
-// 	  throw "action type : like";
-// 	  var tripQuery = new Parse.Query("Trip");
-// 	  tripQuery.get(request.object.get("trip").id, {
-// 		  sucess: function(likedTrip){
-// 			  request.object.set("trip", likedTrip);
-// 			  console.log(likedTrip);
-// 			  var publicDetailQuery = new Parse.Query("PublicTripDetail");
-// 			  publicDetailQuery.get(likedTrip.object.get("publicTripDetail").id, {
-// 				  sucess: function(tripDetail){
-// 					  tripDetail.increment("totalLikes");
-// 					  tripDetail.save();
-// 					  console.log("Found Liked tripDetail" + tripDetail + " and updated");
-// 				  },
-// 				  error: function(error){
-// 				  	console.log("Find PublicTripDetail Error when user do action 'like' a photo");
-// 				  }
-//
-// 			  });
-// 		  },
-// 		  error: function(error){
-// 			  console.log("Find Trip Error when user do action 'like' a photo");
-// 		  }
-// 	  });
-//
-//   }
   else {
     Parse.Push.send({
       where: query, // Set our Installation query.
-      data: alertPayload(request)
-    }, { useMasterKey: true }).then(function() {
+      data: alertPayload(request),
+    }, {
+      useMasterKey: true,
+    })
+    .then(function() {
       // Push was successful
-      console.log("Sent push.");
-    }, function(error) {
-      throw "Push Error " + error.code + " : " + error.message;
+      console.log('Sent push.');
+    })
+    .catch(error => {
+      console.log('Push Error %s', error.message);
+      throw new Error('Push Error ' + error.code + ' : ' + error.message);
     });
   }
 });
@@ -837,7 +813,6 @@ function alertPayload(request) {
  * (still following but can't read data). Hopefully failure doesn't occur, but we use an afterDelete to be safe.
  */
 Parse.Cloud.afterDelete('Activity', function(request) {
-Parse.Cloud.useMasterKey();
   // If it's deleting a Follow then it's an Unfollow, so we need to remove them from that user's role as well.
   if (request.object.get("type") === "follow") {
     var userToUnfollow = request.object.get("toUser");

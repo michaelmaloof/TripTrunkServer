@@ -4,11 +4,13 @@
 
 // Make sure all installations point to the current user.
 // Parse.Cloud.beforeSave(Parse.Installation, function(request, response) {
-//   Parse.Cloud.useMasterKey();
 //   if (request.user) {
-// 	  request.object.set('user', request.user);
-//   } else {
-//   	request.object.unset('user');
+//     console.log('User to Installation');
+//     request.object.set('user', request.user);
+//   }
+//   else {
+//     console.log('Unset user from installation');
+//     request.object.unset('user');
 //   }
 //   response.success();
 // });
