@@ -61,7 +61,7 @@ Parse.Cloud.define("queryForNewsFeed", function(request, response) {
 		
 	photoQuery.limit(200);
 		
-	photoQuery.find({useMasterKey: true}).then(function(objects) {
+	photoQuery.find({sessionToken: request.user.getSessionToken()}).then(function(objects) {
 		for(var i=0; i<objects.length;i++){
 			var object = objects[i];
 			var savedTripIndex = containsTripObject(object,mainPhotos);
@@ -99,7 +99,7 @@ Parse.Cloud.define("queryForNewsFeed", function(request, response) {
 		
 		subQuery.limit(200);
 		
-		subQuery.find({useMasterKey: true}).then(function(objects) {
+		subQuery.find({sessionToken: request.user.getSessionToken()}).then(function(objects) {
 			for(var i=0; i<objects.length;i++){
 			var object = objects[i];
 			    var trip = object.get('trip');
@@ -270,7 +270,7 @@ Parse.Cloud.define("addToTripSprint13", function(request, response) {
   blockQuery.equalTo("blockedUser", fromUser);
   blockQuery.equalTo("fromUser", toUser);
 
-  blockQuery.find({useMasterKey: true})
+  blockQuery.find({sessionToken: request.user.getSessionToken()})
   .then(function(blocked) {
     if (blocked.length > 0) {
       return Parse.Promise.error("User is blocked from performing this action");
@@ -287,7 +287,7 @@ Parse.Cloud.define("addToTripSprint13", function(request, response) {
     query.equalTo("type", "addToTrip");
     query.equalTo("toUser", toUser);
 
-    return query.first({useMasterKey: true});
+    return query.first({sessionToken: request.user.getSessionToken()});
   })
 
   .then(function(addToTripObject) {
@@ -314,13 +314,13 @@ Parse.Cloud.define("addToTripSprint13", function(request, response) {
     roleQuery.equalTo("name", roleName);
     console.log("Looking for role name: " + roleName);
 
-    return roleQuery.first({useMasterKey: true});
+    return roleQuery.first({sessionToken: request.user.getSessionToken()});
 
   }).then(function(role) {
     console.log("Role Found: " + role);
     if (role) {
       role.getUsers().add(toUser);
-      return role.save({useMasterKey: true});
+      return role.save({sessionToken: request.user.getSessionToken()});
     }
     return Parse.Promise.error("No Role found" );
 
@@ -344,7 +344,7 @@ Parse.Cloud.define("addToTripSprint13", function(request, response) {
     acl.setWriteAccess(toUser, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
     acl.setWriteAccess(creator, true);
     activity.setACL(acl);
-    return activity.save({useMasterKey: true});
+    return activity.save({sessionToken: request.user.getSessionToken()});
     
   })
   .then(function(activity) {
@@ -386,7 +386,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
   blockQuery.equalTo("blockedUser", fromUser);
   blockQuery.equalTo("fromUser", toUser);
 
-  blockQuery.find({useMasterKey: true})
+  blockQuery.find({sessionToken: request.user.getSessionToken()})
   .then(function(blocked) {
     if (blocked.length > 0) {
       return Parse.Promise.error("User is blocked from performing this action");
@@ -403,7 +403,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
     query.equalTo("type", "addToTrip");
     query.equalTo("toUser", toUser);
 
-    return query.first({useMasterKey: true});
+    return query.first({sessionToken: request.user.getSessionToken()});
   })
 
   .then(function(addToTripObject) {
@@ -429,13 +429,13 @@ Parse.Cloud.define("addToTrip", function(request, response) {
     roleQuery.equalTo("name", roleName);
     console.log("Looking for role name: " + roleName);
 
-    return roleQuery.first({useMasterKey: true});
+    return roleQuery.first({sessionToken: request.user.getSessionToken()});
 
   }).then(function(role) {
     console.log("Role Found: " + role);
     if (role) {
       role.getUsers().add(toUser);
-      return role.save({useMasterKey: true});
+      return role.save({sessionToken: request.user.getSessionToken()});
     }
     return Parse.Promise.error("No Role found");
 
@@ -458,7 +458,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
     acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
     acl.setWriteAccess(toUser, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
     activity.setACL(acl);
-    return activity.save({useMasterKey: true});
+    return activity.save({sessionToken: request.user.getSessionToken()});
     
   })
   .then(function(activity) {
@@ -494,7 +494,7 @@ Parse.Cloud.beforeSave('Activity', function(request, response) {
  * FOLLOW ACTIVITY FLOW
  */ 
   if (activity.get("type") === "follow") {
-    blockQuery.find({useMasterKey: true})
+    blockQuery.find({sessionToken: request.user.getSessionToken()})
     .then(function(blocked) {
       if (blocked.length > 0) {
         return Parse.Promise.error("User is blocked from performing this action");
@@ -558,7 +558,7 @@ Parse.Cloud.beforeSave('Activity', function(request, response) {
     query.equalTo("type", "addToTrip");
     query.equalTo("toUser", toUser);
 
-    query.first({useMasterKey: true})
+    query.first({sessionToken: request.user.getSessionToken()})
     .then(function(addToTripObject) {
       console.log(addToTripObject);
       // If an addToTrip Object, it already exists. 
@@ -578,13 +578,13 @@ Parse.Cloud.beforeSave('Activity', function(request, response) {
       roleQuery.equalTo("name", roleName);
       console.log("Looking for role name: " + roleName);
 
-      return roleQuery.first({useMasterKey: true});
+      return roleQuery.first({sessionToken: request.user.getSessionToken()});
 
     }).then(function(role) {
       console.log("Role FOund: " + role);
       if (role) {
         role.getUsers().add(toUser);
-        return role.save({useMasterKey: true});
+        return role.save({sessionToken: request.user.getSessionToken()});
       }
       return Parse.Promise.error("No Role found for name: " + roleName);
 
@@ -833,7 +833,7 @@ Parse.Cloud.afterDelete('Activity', function(request) {
         role.getUsers().remove(currentUser);
 
         console.log(role.getUsers());
-        return role.save({useMasterKey: true});
+        return role.save({sessionToken: request.user.getSessionToken()});
       },
       error: function(error) {
         console.error("Error updating role: " + error);
@@ -854,7 +854,7 @@ Parse.Cloud.afterDelete('Activity', function(request) {
       success:function(role) {
         role.getUsers().remove(userLeaving);
 
-        return role.save({useMasterKey: true});
+        return role.save({sessionToken: request.user.getSessionToken()});
       },
       error: function(error) {
         console.error("Error updating role: " + error);
@@ -882,7 +882,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
         query.equalTo("fromUser", userToFriend);
         query.equalTo("toUser", request.user);
         query.equalTo("type", "pending_follow");
-        query.first({useMasterKey: true}).then(function(activity) {
+        query.first({sessionToken: request.user.getSessionToken()}).then(function(activity) {
           if (activity) {
             return activity.destroy();
           }
@@ -904,7 +904,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
         query.equalTo("fromUser", userToFriend);
         query.equalTo("toUser", request.user);
         query.equalTo("type", "pending_follow");
-        query.first({useMasterKey: true}).then(function(activity) {
+        query.first({sessionToken: request.user.getSessionToken()}).then(function(activity) {
           if (activity) {
             // Change the type to follow
             activity.set("type", "follow");
@@ -915,7 +915,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
             acl.setPublicReadAccess(true);
             activity.setACL(acl);
 
-            return activity.save({useMasterKey: true});
+            return activity.save({sessionToken: request.user.getSessionToken()});
           }
           else {
             return Parse.Promise.error("No Pending Follow Activity Found");
