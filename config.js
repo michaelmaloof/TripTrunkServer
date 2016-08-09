@@ -10,7 +10,7 @@ const config = {
 
   production: {
     port: process.env.PORT || 3000,
-    databaseURI: 'mongodb://ttserver:TripTrunk33@ds145405.mlab.com:45405/triptrunk',
+    databaseURI: 'mongodb://ttserver:TripTrunk33@ds153365-a0.mlab.com:53365,ds153365-a1.mlab.com:53365/triptrunk?replicaSet=rs-ds153365',
   },
 
 };
