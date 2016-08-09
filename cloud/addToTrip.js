@@ -26,7 +26,7 @@ Parse.Cloud.define('addToTripSprint13', function(request, response) {
   blockQuery.equalTo('fromUser', toUser);
 
   blockQuery.find({sessionToken: sessionToken})
-  .then(function(blocked) {
+  .then((blocked) => {
     if (blocked.length > 0) {
       return Parse.Promise.error('User is blocked from performing this action');
     }
@@ -37,26 +37,24 @@ Parse.Cloud.define('addToTripSprint13', function(request, response) {
      * Ensure we aren't adding duplicate users to a Trunk
      * i.e. if the user clicks Next in trunk creation, then goes back to the user screen and clicks next again.
      */
-    var query = new Parse.Query('Activity');
+    const query = new Parse.Query('Activity');
     query.equalTo('trip', trip);
     query.equalTo('type', 'addToTrip');
     query.equalTo('toUser', toUser);
 
     return query.first({sessionToken: sessionToken});
   })
-
-  .then(function(addToTripObject) {
-    console.log(addToTripObject);
+  .then((addToTripObject) => {
     // If an addToTrip Object, it already exists. 
     if (addToTripObject) {
       console.log('ADD TO TRIP OBJECT FOUND SO ALREADY ADDED');
       return Parse.Promise.error('User already added to trunk');
     }
 
-    console.log(trip.id);
+    console.log('Trip Id: %s', trip.id);
 
     // ADD TRUNK MEMBER TO ROLE
-    var roleName;
+    let roleName;
     // If an ApprovingUser is passed in
     if (trip.id) {
       roleName = 'trunkMembersOf_' + trip.id;
@@ -65,16 +63,17 @@ Parse.Cloud.define('addToTripSprint13', function(request, response) {
       return Parse.Promise.error('No trip id passed so we have no Role Name');
     }
 
-    var roleQuery = new Parse.Query(Parse.Role);
+    const roleQuery = new Parse.Query(Parse.Role);
     roleQuery.equalTo('name', roleName);
     console.log('Looking for role name: ' + roleName);
 
     return roleQuery.first({sessionToken: sessionToken});
 
   }).then(function(role) {
-    console.log('Role Found: ' + role);
+    console.log('Role Found: %s', role.get('name'));
     if (role) {
-      role.getUsers().add(toUser);
+      role.getUsers({sessionToken: sessionToken}).add(toUser);
+      console.log(role.getUsers({sessionToken: sessionToken}));
       return role.save({sessionToken: sessionToken});
     }
     return Parse.Promise.error('No Role found' );

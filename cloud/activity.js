@@ -245,7 +245,7 @@ var addToFriendRole = function(fromUserId, toUserId) {
  * Accepts a "fromUserId" parameter
  */
 
-Parse.Cloud.define("addToTripSprint13", function(request, response) {
+Parse.Cloud.define("OldaddToTripSprint13", function(request, response) {
   // Create full objects out of the ID's sent as params.
   var fromUser = new Parse.User();
   fromUser.id = request.params.fromUserId;
