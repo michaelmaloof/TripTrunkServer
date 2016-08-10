@@ -214,7 +214,7 @@ var addToFriendRole = function(fromUserId, toUserId) {
       role.getUsers().add(userToFriend);
 
       // Returns role in THIS promise chain.
-      return role.save({useMasterKey: true});
+      return role.save(null, {useMasterKey: true});
 
     }
     else
@@ -320,7 +320,7 @@ Parse.Cloud.define("OldaddToTripSprint13", function(request, response) {
     console.log("Role Found: " + role);
     if (role) {
       role.getUsers().add(toUser);
-      return role.save({sessionToken: request.user.getSessionToken()});
+      return role.save(null, {sessionToken: request.user.getSessionToken()});
     }
     return Parse.Promise.error("No Role found" );
 
@@ -344,7 +344,7 @@ Parse.Cloud.define("OldaddToTripSprint13", function(request, response) {
     acl.setWriteAccess(toUser, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
     acl.setWriteAccess(creator, true);
     activity.setACL(acl);
-    return activity.save({sessionToken: request.user.getSessionToken()});
+    return activity.save(null, {sessionToken: request.user.getSessionToken()});
     
   })
   .then(function(activity) {
@@ -435,7 +435,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
     console.log("Role Found: " + role);
     if (role) {
       role.getUsers().add(toUser);
-      return role.save({sessionToken: request.user.getSessionToken()});
+      return role.save(null, {sessionToken: request.user.getSessionToken()});
     }
     return Parse.Promise.error("No Role found");
 
@@ -458,7 +458,7 @@ Parse.Cloud.define("addToTrip", function(request, response) {
     acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
     acl.setWriteAccess(toUser, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
     activity.setACL(acl);
-    return activity.save({sessionToken: request.user.getSessionToken()});
+    return activity.save(null, {sessionToken: request.user.getSessionToken()});
     
   })
   .then(function(activity) {
@@ -584,7 +584,7 @@ Parse.Cloud.beforeSave('Activity', function(request, response) {
       console.log("Role FOund: " + role);
       if (role) {
         role.getUsers().add(toUser);
-        return role.save({sessionToken: request.user.getSessionToken()});
+        return role.save(null, {sessionToken: request.user.getSessionToken()});
       }
       return Parse.Promise.error("No Role found for name: " + roleName);
 
@@ -833,7 +833,7 @@ Parse.Cloud.afterDelete('Activity', function(request) {
         role.getUsers().remove(currentUser);
 
         console.log(role.getUsers());
-        return role.save({sessionToken: request.user.getSessionToken()});
+        return role.save(null, {sessionToken: request.user.getSessionToken()});
       },
       error: function(error) {
         console.error("Error updating role: " + error);
@@ -854,7 +854,7 @@ Parse.Cloud.afterDelete('Activity', function(request) {
       success:function(role) {
         role.getUsers().remove(userLeaving);
 
-        return role.save({sessionToken: request.user.getSessionToken()});
+        return role.save(null, {sessionToken: request.user.getSessionToken()});
       },
       error: function(error) {
         console.error("Error updating role: " + error);
@@ -915,7 +915,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
             acl.setPublicReadAccess(true);
             activity.setACL(acl);
 
-            return activity.save({sessionToken: request.user.getSessionToken()});
+            return activity.save(null, {sessionToken: request.user.getSessionToken()});
           }
           else {
             return Parse.Promise.error("No Pending Follow Activity Found");

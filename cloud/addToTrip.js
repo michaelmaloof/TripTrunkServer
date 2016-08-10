@@ -40,7 +40,7 @@ function getTrunkRole(tripId) {
   roleQuery.equalTo('name', roleName);
   console.log('Looking for role name: %s', roleName);
 
-  return roleQuery.first({useMasterKey: true});
+  return roleQuery.find({useMasterKey: true});
 }
 
 /**
@@ -59,7 +59,7 @@ function addUsersToTripACL(users, trip, sessionToken) {
       acl.setWriteAccess(user, true);
     });
     trip.setACL(acl);
-    return trip.save({sessionToken: sessionToken});
+    return trip.save(null, {sessionToken: sessionToken});
   });
 }
 
@@ -122,11 +122,11 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
     // Get the Trunk Member Role.
     return getTrunkRole(trip.id, sessionToken);
   })
-  .then(role => {
+  .then(roles => {
+    const role = roles[0];
     if (role) {
-      console.log(newMembers);
       role.getUsers().add(newMembers);
-      return role.save({useMasterKey: true});
+      return role.save(null, {useMasterKey: true});
     }
     return Parse.Promise.error('No Role found' );
 
@@ -157,7 +157,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
       acl.setWriteAccess(user, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
       acl.setWriteAccess(creator, true);
       activity.setACL(acl);
-      return activity.save({useMasterKey: true});
+      return activity.save(null, {useMasterKey: true});
     }));
   })
   .then(activities => {
