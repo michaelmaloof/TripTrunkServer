@@ -8,15 +8,15 @@ const _ = require('underscore');
  * @param  {Session Token} sessionToken
  * @return {True or Error}
  */
-function checkDuplicate(user, trip, sessionToken) {
+function checkDuplicates(users, trip, sessionToken) {
   const query = new Parse.Query('Activity');
   query.equalTo('trip', trip);
   query.equalTo('type', 'addToTrip');
-  query.equalTo('toUser', user);
+  query.containedIn('toUser', users);
 
-  return query.first({sessionToken: sessionToken})
-  .then(addToTripObject => {
-    if (addToTripObject) {
+  return query.find({useMasterKey: true})
+  .then(objs => {
+    if (objs.length > 0) {
       return Parse.Promise.error('ERROR: User already added to trunk');
     }
     return true;
@@ -43,7 +43,14 @@ function getTrunkRole(tripId) {
   return roleQuery.first({useMasterKey: true});
 }
 
-function addUsersToPrivateTrip(users, trip, sessionToken) {
+/**
+ * Add a list of users to the ACL for a Trip.
+ * @param {Array} users        Parse.User objects or userIds
+ * @param {Trip} trip         Trip object - only has to have .id, we'll fetch the rest.
+ * @param {sessionToken} sessionToken
+ */
+function addUsersToTripACL(users, trip, sessionToken) {
+  console.log('Adding users to Trip ACL');
   return trip.fetch({sessionToken: sessionToken})
   .then(trip => {
     const acl = trip.getACL();
@@ -77,7 +84,7 @@ function addUsersToPrivateTrip(users, trip, sessionToken) {
  */
 
 Parse.Cloud.define('AddMembersToTrip', function(request, response) {
-
+  console.log(request.params);
   const sessionToken = request.user.getSessionToken();
 
   const fromUser = new Parse.User();
@@ -109,7 +116,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
      * Ensure we aren't adding duplicate users to a Trunk
      * i.e. if the user clicks Next in trunk creation, then goes back to the user screen and clicks next again.
      */
-    return checkDuplicate(fromUser, trip, sessionToken);
+    return checkDuplicates(newMembers, trip, sessionToken);
   })
   .then(success => {
     // Get the Trunk Member Role.
@@ -117,6 +124,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
   })
   .then(role => {
     if (role) {
+      console.log(newMembers);
       role.getUsers().add(newMembers);
       return role.save({useMasterKey: true});
     }
@@ -124,10 +132,9 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
 
   })
   .then(role => {
-    // Role Updated with new members
-
+    // Role Updated with new members - If it's private, add the users to the Trip's ACL
     if (privateTrip) {
-      return addUsersToPrivateTrip(newMembers, trip, sessionToken);
+      return addUsersToTripACL(newMembers, trip, sessionToken);
     }
     return Promise.resolve();
   })
