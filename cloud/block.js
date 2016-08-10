@@ -55,14 +55,14 @@ Parse.Cloud.beforeSave('Block', (request, response) => {
         },
         error: function(error) {
           // ERROR unfollowing
-          response.error('Failed to unfollow');
+          return response.error('Failed to unfollow');
         },
       });
 
       return true;
     },
     error: function(error) {
-      response.error('Failed to see if Blocked User already exists. User not blocked.');
+      return response.error('Failed to see if Blocked User already exists. User not blocked.');
     },
   });
 

@@ -43,6 +43,18 @@ function getTrunkRole(tripId) {
   return roleQuery.first({useMasterKey: true});
 }
 
+function addUsersToPrivateTrip(users, trip, sessionToken) {
+  return trip.fetch({sessionToken: sessionToken})
+  .then(trip => {
+    const acl = trip.getACL();
+    _.each(users, user => {
+      acl.setReadAccess(user, true);
+      acl.setWriteAccess(user, true);
+    });
+    trip.setACL(acl);
+    return trip.save({sessionToken: sessionToken});
+  });
+}
 
 
 /**
@@ -76,7 +88,8 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
 
   const privateTrip = request.params.private;
 
-  const trip = new Parse.Object.extend('Trip')();
+  const Trip = Parse.Object.extend('Trip');
+  const trip = new Trip();
   trip.id = request.params.tripId;
 
   const content = request.params.content;
@@ -112,6 +125,13 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
   })
   .then(role => {
     // Role Updated with new members
+
+    if (privateTrip) {
+      return addUsersToPrivateTrip(newMembers, trip, sessionToken);
+    }
+    return Promise.resolve();
+  })
+  .then(() => {
 
     return Promise.all(_.each(newMembers, user => {
       // Create an Activity for addToTrip
