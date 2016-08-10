@@ -67,3 +67,28 @@ Parse.Cloud.beforeSave('Block', (request, response) => {
   });
 
 });
+
+
+module.exports = {
+
+  /**
+   * Tells if the User has blocked another User
+   * @param  {String} user         User who may have done the blocking
+   * @param  {String} blockedUser  User to check if they are blocked
+   * @param  {token} sessionToken  Session Token for permissions
+   * @return {BOOL}                Is the user blocked?
+   */
+  allowed: function(user, blockedUser, sessionToken) {
+    const blockQuery = new Parse.Query('Block');
+    blockQuery.equalTo('blockedUser', blockedUser);
+    blockQuery.equalTo('fromUser', user);
+
+    return blockQuery.find({sessionToken: sessionToken})
+    .then((blocked) => {
+      if (blocked.length > 0) {
+        return Parse.Promise.error('User is blocked from performing this action');
+      }
+      return true;
+    });
+  },
+};
