@@ -84,7 +84,7 @@ module.exports = {
     blockQuery.equalTo('fromUser', user);
 
     return blockQuery.find({sessionToken: sessionToken})
-    .then((blocked) => {
+    .then(blocked => {
       if (blocked.length > 0) {
         return Parse.Promise.error('User is blocked from performing this action');
       }

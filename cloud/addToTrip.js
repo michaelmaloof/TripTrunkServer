@@ -1,5 +1,6 @@
 const block = require('./block');
 const _ = require('underscore');
+
 /**
  * Checks if an Activity already exists for adding this user to the trip.
  * Thros an error if user has already been added
@@ -69,6 +70,7 @@ function addUsersToTripACL(users, trip, sessionToken) {
  * Allows the app to Add Members to a Trunk
  *
  * Accepts the params:
+
 { tripId: 'OjlRSeNC16',
   fromUserId: '82yTvrtvO7',
   content: 'Dexter City',
@@ -78,9 +80,6 @@ function addUsersToTripACL(users, trip, sessionToken) {
   users: [ '82yTvrtvO7' ],
   private: false }
  *
-
-  TODO: If trip is private, update the Trip's ACL with each user and then save the Trip
-
  */
 
 Parse.Cloud.define('AddMembersToTrip', function(request, response) {
@@ -109,7 +108,8 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
     return newUser;
   });
 
-
+  // TODO: right now block.allowed is passing in the same user - i.e. not actually checking if the newMembers have blocked the fromUser.
+  // Change block.allowed to accept an array so we can check all of them.
   block.allowed(fromUser, fromUser, sessionToken)
   .then(allowed => {
     /*
@@ -138,28 +138,25 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
     }
     return Promise.resolve();
   })
-  .then(() => {
+  .then(() => Promise.all(_.each(newMembers, user => {
+    // Create an Activity for addToTrip
+    const Activity = Parse.Object.extend('Activity');
+    const activity = new Activity();
+    activity.set('type', 'addToTrip');
+    activity.set('trip', trip);
+    activity.set('fromUser', fromUser);
+    activity.set('toUser', user);
+    activity.set('content', content);
+    activity.set('latitude', latitude);
+    activity.set('longitude', longitude);
 
-    return Promise.all(_.each(newMembers, user => {
-      // Create an Activity for addToTrip
-      const Activity = Parse.Object.extend('Activity');
-      const activity = new Activity();
-      activity.set('type', 'addToTrip');
-      activity.set('trip', trip);
-      activity.set('fromUser', fromUser);
-      activity.set('toUser', user);
-      activity.set('content', content);
-      activity.set('latitude', latitude);
-      activity.set('longitude', longitude);
-
-      const acl = new Parse.ACL(fromUser);
-      acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
-      acl.setWriteAccess(user, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
-      acl.setWriteAccess(creator, true);
-      activity.setACL(acl);
-      return activity.save(null, {useMasterKey: true});
-    }));
-  })
+    const acl = new Parse.ACL(fromUser);
+    acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
+    acl.setWriteAccess(user, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
+    acl.setWriteAccess(creator, true);
+    activity.setACL(acl);
+    return activity.save(null, {useMasterKey: true});
+  })))
   .then(activities => {
     // Successfully saved activities for all members of the trunk.
     return response.success();
