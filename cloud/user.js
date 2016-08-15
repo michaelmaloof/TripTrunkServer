@@ -53,7 +53,7 @@ Parse.Cloud.afterSave(Parse.User, function(request, response) {
  */
 Parse.Cloud.define("becomePrivate", function(request, response) {
   Parse.Cloud.useMasterKey();
-
+  const sessionToken = request.user.getSessionToken();
   var user = request.user;
   user.set("private", true);
   user.save();
@@ -64,7 +64,8 @@ Parse.Cloud.define("becomePrivate", function(request, response) {
   var roleQuery = new Parse.Query("_Role");
   roleQuery.equalTo("name", roleName);
 
-  roleQuery.first().then(function(role) {
+  roleQuery.first({sessionToken: sessionToken})
+  .then(function(role) {
     if (!role) {
       // If for some reason their role doesn't exist already, create it.
       var acl = new Parse.ACL(user);
@@ -82,7 +83,7 @@ Parse.Cloud.define("becomePrivate", function(request, response) {
     query.equalTo('toUser', user);
     query.equalTo('type', "follow");
     query.limit(10000); // set a higher limit otherwise it only does 100.
-    return query.find();
+    return query.find({sessionToken: sessionToken});
 
   }).then(function(activities) {
 
@@ -93,14 +94,14 @@ Parse.Cloud.define("becomePrivate", function(request, response) {
       usersInRole.add(userToFriend);
     });
 
-    return userRole.save();
+    return userRole.save(null, {sessionToken: sessionToken});
 
   }).then(function(role) {
   
     // Query for all of the user's photo
     var query = new Parse.Query('Photo');
     query.equalTo('user', user);
-    return query.find();
+    return query.find({sessionToken: sessionToken});
 
   }).then(function(photos) {
 
@@ -121,7 +122,7 @@ Parse.Cloud.define("becomePrivate", function(request, response) {
           console.log(counter + " photos processed.");
         }
         counter += 1;
-        return photo.save();
+        return photo.save(null, {sessionToken: sessionToken});
       });
     });
 

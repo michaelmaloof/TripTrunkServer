@@ -187,7 +187,7 @@ var date_sort_desc = function (obj1, obj2) {
  * 
  * Returns a deferred Promise.
  */
-var addToFriendRole = function(fromUserId, toUserId) {
+var addToFriendRole = function(fromUserId, toUserId, sessionToken) {
   var promise = new Parse.Promise();
   console.log("addToFriendRole starting");
   console.log("FromUserID: " + fromUserId);
@@ -207,7 +207,8 @@ var addToFriendRole = function(fromUserId, toUserId) {
   var roleQuery = new Parse.Query(Parse.Role);
   roleQuery.equalTo("name", roleName);
 
-  roleQuery.first().then(function(role) {
+  roleQuery.first({useMasterKey: true})
+  .then(function(role) {
     if (role) {
       console.log("addToFriendRole found Role");
 
@@ -817,49 +818,47 @@ function alertPayload(request) {
  */
 Parse.Cloud.afterDelete('Activity', function(request) {
   // If it's deleting a Follow then it's an Unfollow, so we need to remove them from that user's role as well.
-  if (request.object.get("type") === "follow") {
-    var userToUnfollow = request.object.get("toUser");
+  if (request.object.get('type') === 'follow') {
+    const userToUnfollow = request.object.get('toUser');
 
-    var roleName = "friendsOf_" + userToUnfollow.id;
-    console.log("Unfollowing user and removing role name: " + roleName);
+    const roleName = 'friendsOf_' + userToUnfollow.id;
+    console.log('Unfollowing user and removing from role name: ' + roleName);
 
-    var roleQuery = new Parse.Query(Parse.Role);
-    roleQuery.equalTo("name", roleName);
-    roleQuery.first({
-      success:function(role) {
-        console.log("Attempt to remove user: " + request.user.id);
-        var currentUser = new Parse.User();
-        currentUser.id = request.user.id;
-        role.getUsers().remove(currentUser);
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', roleName);
 
-        console.log(role.getUsers());
-        return role.save(null, {sessionToken: request.user.getSessionToken()});
-      },
-      error: function(error) {
-        console.error("Error updating role: " + error);
-      },
-      useMasterKey: true
+    roleQuery.first({useMasterKey: true})
+    .then(role => {
+      console.log('Attempt to remove user: ' + request.user.id);
+      const currentUser = new Parse.User();
+      currentUser.id = request.user.id;
+      role.getUsers().remove(currentUser);
+
+      console.log(role.getUsers());
+      return role.save(null, {useMasterKey: true});
+    })
+    .catch(error => {
+      console.error('Error updating role: ' + error);
     });
+
   }
   /* REMOVE FROM TRIP */
-  else if (request.object.get("type") === "addToTrip") {
-    var userLeaving = request.object.get("toUser");
+  else if (request.object.get('type') === 'addToTrip') {
+    const userLeaving = request.object.get('toUser');
 
-    var roleName = "trunkMembersOf_" + request.object.get("trip").id;
-    console.log("Leaving trunk with role name: " + roleName);
+    const roleName = 'trunkMembersOf_' + request.object.get('trip').id;
+    console.log('Leaving trunk with role name: ' + roleName);
 
-    var roleQuery = new Parse.Query(Parse.Role);
-    roleQuery.equalTo("name", roleName);
-    roleQuery.first({
-      success:function(role) {
-        role.getUsers().remove(userLeaving);
+    const roleQuery = new Parse.Query(Parse.Role);
+    roleQuery.equalTo('name', roleName);
+    roleQuery.first({useMasterKey: true})
+    .then(role => {
+      role.getUsers().remove(userLeaving);
 
-        return role.save(null, {sessionToken: request.user.getSessionToken()});
-      },
-      error: function(error) {
-        console.error("Error updating role: " + error);
-      },
-      useMasterKey: true
+      return role.save(null, {useMasterKey: true});
+    })
+    .catch(error => {
+      console.error('Error updating role: ' + error);
     });
   }
 });
@@ -870,6 +869,8 @@ Parse.Cloud.afterDelete('Activity', function(request) {
  */
 
 Parse.Cloud.define("approveFriend", function(request, response) {
+  const sessionToken = request.user.getSessionToken();
+
   var userToFriend = new Parse.User();
   userToFriend.id = request.params.fromUserId;
   var didApprove = request.params.accepted;
@@ -882,7 +883,8 @@ Parse.Cloud.define("approveFriend", function(request, response) {
         query.equalTo("fromUser", userToFriend);
         query.equalTo("toUser", request.user);
         query.equalTo("type", "pending_follow");
-        query.first({sessionToken: request.user.getSessionToken()}).then(function(activity) {
+        query.first({sessionToken: sessionToken})
+        .then(function(activity) {
           if (activity) {
             return activity.destroy();
           }
@@ -904,7 +906,8 @@ Parse.Cloud.define("approveFriend", function(request, response) {
         query.equalTo("fromUser", userToFriend);
         query.equalTo("toUser", request.user);
         query.equalTo("type", "pending_follow");
-        query.first({sessionToken: request.user.getSessionToken()}).then(function(activity) {
+        query.first({sessionToken: sessionToken})
+        .then(function(activity) {
           if (activity) {
             // Change the type to follow
             activity.set("type", "follow");
@@ -915,7 +918,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
             acl.setPublicReadAccess(true);
             activity.setACL(acl);
 
-            return activity.save(null, {sessionToken: request.user.getSessionToken()});
+            return activity.save(null, {sessionToken: sessionToken});
           }
           else {
             return Parse.Promise.error("No Pending Follow Activity Found");
@@ -933,7 +936,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
         .then(function() {
           console.log("addToFriendRole AND push notification finished in accept request");
           console.log("Responding success");
-          response.success();
+          response.success('User Approved');
         }, function(error) {
           response.error(error);
       });
@@ -942,6 +945,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
 
 // THIS FUNCTION DOESN"T WORK YET
 function sendPushNotificationForAcceptedFollowRequest(activity, request) {
+  return Promise.resolve();
 
   var promise = new Parse.Promise();
     // Send the fromUser a push notification telling them that their request was accepted.
