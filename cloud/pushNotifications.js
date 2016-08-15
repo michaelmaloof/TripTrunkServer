@@ -11,8 +11,6 @@ const _ = require('underscore');
 
 
 function sendNotification(request) {
-  Parse.Cloud.useMasterKey();
-
   /*
    * PUSH NOTIFICATIONS
    */
@@ -70,3 +68,151 @@ Parse.Cloud.afterSave('PushNotification', function(request) {
   sendNotification(request);
 });
 
+
+// Build the message for the Push Notification
+function alertMessage(activity, user) {
+  let message = '';
+
+  const hasUser = user.get('username') && user.get('name');
+
+  switch (activity.get('type')) {
+  case 'comment':
+    if (hasUser) {
+      message = `${user.get('username')} said: ${activity.get('content').trim()}`;
+    }
+    else {
+      message = 'Someone commented on your photo.';
+    }
+    break;
+  case 'mention':
+
+    const mentionType = activity.get('isCaption') ? 'photo caption!' : 'comment!';
+
+    if (hasUser) {
+      message = `${user.get('username')} mentioned you in a ${mentionType}`;
+    }
+    else {
+      message = `Someone mentioned you in a ${mentionType}`;
+    }
+    break;
+  case 'like':
+    if (hasUser) {
+      message = `${user.get('username')} likes your photo.`;
+    }
+    else {
+      message = 'Someone likes your photo.';
+    }
+    break;
+  case 'follow':
+    if (hasUser) {
+      message = `${user.get('name')} (@${user.get('username')}) started following you.`;
+    }
+    else {
+      message = 'You have a new follower.';
+    }
+    break;
+  case 'addToTrip':
+    if (hasUser) {
+      if (activity.get('trip').get('isPrivate')) {
+        message = `${request.user.get('username')} added you to a private trunk.`;
+      }
+      else {
+        message = `${request.user.get('username')} added you to a trunk.`;
+      }
+    }
+    else {
+      message = 'You were added to a trunk.';
+    }
+    break;
+  case 'pending_follow':
+    if (hasUser) {
+      message = `${request.user.get('name')} (@${request.user.get('username')}) requested to follow you.`;
+    }
+    else {
+      message = 'You have a new follower request.';
+    }
+    break;
+  default:
+    return '';
+  }
+
+  // Trim our message to 140 characters.
+  if (message.length > 140) {
+    message = message.substring(0, 140);
+  }
+
+  return message;
+}
+
+module.exports = {
+
+  // Create the payload for the push notification for an activity
+  alertPayload: function(activity, user) {
+
+    if (activity.get('type') === 'comment') {
+      return {
+        'content-available': 1,
+        alert: alertMessage(activity, user), // Set our alert message.
+        badge: 'Increment',
+        p: 'a', // Payload Type: Activity
+        t: 'c', // Activity Type: Comment
+        fu: activity.get('fromUser').id, // From User
+        pid: activity.get('photo').id, // Photo Id
+      };
+    }
+    else if (activity.get('type') === 'mention') {
+      return {
+        'content-available': 1,
+        alert: alertMessage(activity, user), // Set our alert message.
+        badge: 'Increment',
+        p: 'a', // Payload Type: Activity
+        t: 'm', // Activity Type: Mention
+        fu: activity.get('fromUser').id, // From User
+        pid: activity.get('photo').id, // Photo Id
+      };
+    }
+    else if (activity.get('type') === 'like') {
+      return {
+        'content-available': 1,
+        alert: alertMessage(activity, user), // Set our alert message.
+        badge: 'Increment',
+        p: 'a', // Payload Type: Activity
+        t: 'l', // Activity Type: Like
+        fu: activity.get('fromUser').id, // From User
+        pid: activity.get('photo').id, // Photo Id
+      };
+    }
+    else if (activity.get('type') === 'follow') {
+      return {
+        'content-available': 1,
+        alert: alertMessage(activity, user), // Set our alert message.
+        badge: 'Increment',
+        p: 'a', // Payload Type: Activity
+        t: 'f', // Activity Type: Follow
+        fu: activity.get('fromUser').id, // From User
+      };
+    }
+    else if (activity.get('type') === 'addToTrip') {
+      return {
+        'content-available': 1,
+        alert: alertMessage(activity, user),
+        badge: 'Increment',
+        p: 'a', // Payload Type: Activity
+        t: 'a', // Activity Type: addToTrip
+        tid: activity.get('trip').id, // Trip Id
+      };
+    }
+    else if (activity.get('type') === 'pending_follow') {
+      return {
+        'content-available': 1,
+        alert: alertMessage(activity, user), // Set our alert message.
+        badge: 'Increment',
+        p: 'a', // Payload Type: Activity
+        t: 'f', // Activity Type: Pending_Follow
+        fu: activity.get('fromUser').id, // From User
+      };
+    }
+
+    return {};
+  },
+};
