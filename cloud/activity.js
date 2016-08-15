@@ -863,117 +863,105 @@ Parse.Cloud.afterDelete('Activity', function(request) {
   }
 });
 
+function sendPushNotificationForAcceptedFollowRequest(activity, sessionToken) {
+
+  // toUser Accepted fromUser's follow request
+  return activity.get('toUser').fetch({sessionToken: sessionToken})
+  .then(toUser => {
+    // Send the fromUser a push notification telling them that their request was accepted.
+    let pushMessage = `${toUser.get('name')} (@${toUser.get('username')}) accepted your follow request.`;
+    // Trim our message to 140 characters.
+    if (pushMessage.length > 140) {
+      pushMessage = pushMessage.substring(0, 140);
+    }
+    const query = new Parse.Query(Parse.Installation);
+    console.log('sending push to: ' + activity.get('fromUser').id);
+    query.equalTo('user', activity.get('fromUser'));
+
+    return Parse.Push.send({
+      where: query, // Set our Installation query.
+      data: {
+        alert: pushMessage, // Set our alert message.
+        p: 'a', // Payload Type: Activity
+        t: 'f', // Activity Type: Follow
+        fu: activity.get('toUser').id, // From User - it's actually the toUser in this case since it's an "accepted" notificaiton.
+      },
+    }, {
+      useMasterKey: true,
+    })
+    .then(() => {
+      // Push was successful
+      console.log('Sent push for acceptance.');
+      return Promise.resolve();
+    });
+  });
+
+
+
+}
+
+// ACCEPTED
+// Get the Pending Follow and change it to a follow
+function approveFollower(activity, sessionToken) {
+  // Change the type to follow
+  activity.set('type', 'follow');
+
+  // Pending_follow activities are readable only by the two users involved.
+  // It should be public now that it's a 'follow' activity.
+  const acl = activity.getACL();
+  acl.setPublicReadAccess(true);
+  activity.setACL(acl);
+
+  return activity.save(null, {sessionToken: sessionToken})
+  .then(activity => {
+
+    const promises = [];
+    promises.push(addToFriendRole(activity.get('fromUser').id, activity.get('toUser').id));
+    promises.push(sendPushNotificationForAcceptedFollowRequest(activity, sessionToken));
+
+    return Promise.all(promises);
+  });
+}
+
+// REJECTED
+// Delete the pending request.
+function rejectFollower(activity, sessionToken) {
+  return activity.destroy({sessionToken: sessionToken});
+}
+
 /*
  * Function to let a user Accept a Follow request - Adds the given user Id into the friend Role for the current User
  * Accepts a "fromUserId" parameter and a "accepted" parameter
  */
-
-Parse.Cloud.define("approveFriend", function(request, response) {
+Parse.Cloud.define('approveFriend', function(request, response) {
   const sessionToken = request.user.getSessionToken();
 
-  var userToFriend = new Parse.User();
+  const userToFriend = new Parse.User();
   userToFriend.id = request.params.fromUserId;
-  var didApprove = request.params.accepted;
+  const didApprove = request.params.accepted;
 
-  if (!didApprove) {
-    // REJECTED
-    // Delete the pending request.
-    // Get the Pending Follow and change it to a follow
-    var query = new Parse.Query("Activity");
-        query.equalTo("fromUser", userToFriend);
-        query.equalTo("toUser", request.user);
-        query.equalTo("type", "pending_follow");
-        query.first({sessionToken: sessionToken})
-        .then(function(activity) {
-          if (activity) {
-            return activity.destroy({sessionToken: sessionToken});
-          }
-          else {
-            return Parse.Promise.error("No Pending Follow Activity Found");
-          }
-          
-        }).then(function() {
-          // Object successfully deleted
-          response.success("Successfully rejected");
-        }, function(error) {
-          response.error(error);
-        });
-  }
-  else {
-    // ACCEPTED
-    // Get the Pending Follow and change it to a follow
-    var query = new Parse.Query("Activity");
-        query.equalTo("fromUser", userToFriend);
-        query.equalTo("toUser", request.user);
-        query.equalTo("type", "pending_follow");
-        query.first({sessionToken: sessionToken})
-        .then(function(activity) {
-          if (activity) {
-            // Change the type to follow
-            activity.set("type", "follow");
+  const query = new Parse.Query('Activity');
+  query.equalTo('fromUser', userToFriend);
+  query.equalTo('toUser', request.user);
+  query.equalTo('type', 'pending_follow');
 
-            // Pending_follow activities are readable only by the two users involved. 
-            // It should be public now that it's a "follow" activity.
-            var acl = activity.getACL();
-            acl.setPublicReadAccess(true);
-            activity.setACL(acl);
+  query.first({sessionToken: sessionToken})
+  .then(activity => {
+    if (!activity) return Parse.Promise.error('No Pending Follow Activity Found');
 
-            return activity.save(null, {sessionToken: sessionToken});
-          }
-          else {
-            return Parse.Promise.error("No Pending Follow Activity Found");
-          }
-          
-        })
-        .then(function(activity) {
-
-          var promises = [];
-          promises.push(addToFriendRole(activity.get("fromUser").id, request.user.id));
-          promises.push(sendPushNotificationForAcceptedFollowRequest(activity, request));
-
-          return Parse.Promise.when(promises);
-        })
-        .then(function() {
-          console.log("addToFriendRole AND push notification finished in accept request");
-          console.log("Responding success");
-          response.success('User Approved');
-        }, function(error) {
-          response.error(error);
-      });
-  }
+    if (didApprove) {
+      return approveFollower(activity, sessionToken);
+    }
+    return rejectFollower(activity, sessionToken);
+  })
+  .then(() => {
+    // Object successfully deleted
+    response.success('approveFriend function Success');
+  })
+  .catch(error => {
+    response.error(error);
+  });
 });
 
-// THIS FUNCTION DOESN"T WORK YET
-function sendPushNotificationForAcceptedFollowRequest(activity, request) {
-  return Promise.resolve();
-
-  var promise = new Parse.Promise();
-    // Send the fromUser a push notification telling them that their request was accepted.
-  var  pushMessage = request.user.get('name') + ' (@' + request.user.get('username') + ')' + ' accepted your follow request.';
-  // Trim our message to 140 characters.
-  if (pushMessage.length > 140) {
-    pushMessage = pushMessage.substring(0, 140);
-  }
-  var query = new Parse.Query(Parse.Installation);
-  console.log("sending push to: " + activity.get('fromUser').id);
-  query.equalTo('user', activity.get('fromUser'));
-  Parse.Push.send({
-    where: query, // Set our Installation query.
-    data: {
-      alert: pushMessage, // Set our alert message.
-      p: 'a', // Payload Type: Activity
-      t: 'f', // Activity Type: Follow
-      fu: request.user.id // From User - it's actually the toUser in this case since it's an "accepted" notificaiton.
-    }
-  }, { useMasterKey: true }).then(function() {
-    // Push was successful
-    console.log('Sent push for acceptance.');
-    promise.resolve();
-  }, function(error) {
-    promise.reject(error);
-  });
-
-  return promise;
-}
 
 
