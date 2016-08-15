@@ -886,7 +886,7 @@ Parse.Cloud.define("approveFriend", function(request, response) {
         query.first({sessionToken: sessionToken})
         .then(function(activity) {
           if (activity) {
-            return activity.destroy();
+            return activity.destroy({sessionToken: sessionToken});
           }
           else {
             return Parse.Promise.error("No Pending Follow Activity Found");
