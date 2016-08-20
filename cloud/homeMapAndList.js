@@ -1,3 +1,5 @@
+const _ = require('underscore');
+
 var trunks = new Array();
 var trips = new Array();
 var tripIds = new Array();
@@ -139,243 +141,59 @@ function getTrunksForUser(limit,skip,latitude,longitude,user,callback) {
     		});
 }
 
-// Parse.Cloud.define("queryForUniqueTrunks", function(request, response) {
-// 		trunks = [];
-// 		trips = [];
-// 		tripIds = [];
-//     	var latitude = request.params.latitude;
-//     	var longitude = request.params.longitude;
-//     	var limit = parseInt(request.params.limit);
-//     	var skip  = parseInt(request.params.skip);
-//     	
-// 	for (var i = 0; i < parseInt(request.params.objectIds.length); i++) {
-// 		var friend = request.params.objectIds[i];
-// 		var friendObject = {
-//   				__type: "Pointer",
-//   				className: "_User",
-//   				objectId: friend
-//   				};
-// 		friends.push(friendObject);
-// 	}
-// 	
-// 		getTrunksForUser(limit,skip,latitude,longitude, {
-// 		success: function(returnValue) {
-// 			console.log("Performed first trunk query successfully");
-// 			//query again if we don't have as many trunks as the limit &
-// 			//if the limit is less than the amount in the query
-// 			if(trunks.length < limit && limit < initialLimit){
-// 				getTrunksForUser(limit,skip,latitude,longitude, {
-// 				success: function(returnValue) {
-// 				console.log("Performed second trunk query successfully");
-// 					//query again if we don't have as many trunks as the limit &
-// 					//if the limit is less than the amount in the query
-// 					if(trunks.length < limit && limit < initialLimit){
-// 						getTrunksForUser(limit,skip,latitude,longitude, {
-// 						success: function(returnValue) {
-// 						console.log("Performed third trunk query successfully");
-// 						//query again if we don't have as many trunks as the limit &
-// 						//if the limit is less than the amount in the query
-// 							if(trunks.length < limit && limit < initialLimit){
-// 								//We've maxed out the limit on queries which is 3
-// 								response.success(trunks);
-// 							}else{
-// 								response.success(trunks);
-// 							}
-// 						},
-// 						error: function(error) {
-// 							console.log("Performed third trunk query with failure");
-// 							response.error(error);
-// 						}
-// 						});
-// 										
-// 					}else{
-//         					response.success(trunks);
-// 					}
-//     				},
-//     				error: function(error) {
-//     					console.log("Performed second trunk query with failure");
-//       					response.error(error);
-//     				}
-//   				});
-// 								
-// 			}else{
-//         			response.success(trunks);
-// 			}
-//     		},
-//     			error: function(error) {
-//     				console.log("Performed first trunk query with failure");
-//       				response.error(error);
-//     			}
-//   		});
-// });
-// 
-// function getTrunksForUser(limit,skip,latitude,longitude,callback) {
-//     	var trunkQuery = new Parse.Query("Activity");
-//   		trunkQuery.equalTo('type', "addToTrip");
-//   		if(latitude && longitude){
-//   			trunkQuery.equalTo("latitude",latitude);
-//   			trunkQuery.equalTo("longitude",longitude);
-//   		}
-//   		trunkQuery.containedIn('toUser', friends);
-// 		trunkQuery.notContainedIn('trip',trips);
-//   		trunkQuery.include(['trip','trip.publicTripDetail']);
-//   		trunkQuery.include('toUser');
-//  		trunkQuery.include(['trip','trip.creator']);
-//  		trunkQuery.include('createdAt');
-//   		trunkQuery.descending('updatedAt');
-//   		trunkQuery.exists('trip');
-//   		trunkQuery.exists('fromUser');
-//   		trunkQuery.exists('toUser');
-//   		trunkQuery.limit(1000); //max the limit
-//   		
-//   		if(skip){
-//   			trunkQuery.skip = skip;	
-//   		}
-//   		
-//   		var objects = new Array();
-// 		//query db for trunks
-//     		trunkQuery.find().then(function (objects) {
-// 			initialLimit += objects.length;
-// 			for (var i = 0; i < objects.length; i++) {
-// 				var object = objects[i];
-// 				var trip = object.get("trip");
-// 				if(trip){
-// 					var publicTrip = trip.get("publicTripDetail");
-// 					if(publicTrip || Parse.User.current().id == trip.get("creator").id){
-// 						var tripId = trip.id;
-// 						if(!containsObject(tripId,tripIds)){
-// 							if(trip.get("creator")){
-// 								trips.push(trip);
-// 								tripIds.push(tripId);
-// 								var acl = trip.get("ACL");
-// 								if(acl.getReadAccess(Parse.User.current()) || acl.getPublicReadAccess()){
-// 									//add object to trunk array
-// 									trunks.push(object);
-// 								}
-// 							}
-// 							//check if the return limit has been reached
-// 							if(trunks.length >= limit){
-// 								break; //this is where we enforce the limit
-// 							}
-// 						}
-// 					}else{
-// 						console.log("The trip ("+trip.get('name')+" in "+trip.get('city')+") is missing it's publicTripDetail");
-// 					}
-// 				}else{
-// 					console.log("The activity " + object.id + " is missing it's Trip");
-// 				}
-// 			}
-// 			trunks.sort(date_sort_desc);
-// 			callback.success(trunks);
-// 				
-//     		}, function (error) {
-// 			callback.error("Error with trunkQuery.find() "+error);
-//     		});
-// }
 
-Parse.Cloud.define("queryForMutualTrunks", function(request, response) {
-		trunks = []; //Added to clear arrays that were auto cleared on parse.com
-		trips = []; //Added to clear arrays that were auto cleared on parse.com
-		tripIds = []; //Added to clear arrays that were auto cleared on parse.com
-		friends = []; //Added to clear arrays that were auto cleared on parse.com
-	var limit = parseInt(request.params.limit);
-    var user = request.user;
-    console.log("user: "+user.Id);
-		var user1Object = {
-  			__type: "Pointer",
-  			className: "_User",
-  			objectId: request.params.user1
-  		};
-  		
-  		var user2Object = {
-  			__type: "Pointer",
-  			className: "_User",
-  			objectId: request.params.user2
-  		};
-  		
-	getMutualTrunks(limit,user1Object,user2Object,user, {
-		success: function(returnValue) {
-			console.log("Performed first trunk query successfully");
-        		response.success(trunks);
-    		},
-    			error: function(error) {
-    				console.log("Performed first trunk query with failure");
-      				response.error(error);
-    			}
-  		});
-});
+function mutualTrunks(user, toUser, limit, token) {
+  // 1) Get the User's trunks
+  const query = new Parse.Query('Activity');
+  query.equalTo('toUser', user);
+  query.equalTo('type', 'addToTrip');
+  query.limit(1000); // Get all of the current user's trips. This can be optimized in the future.
 
-function getMutualTrunks(limit,user1,user2,user,callback){    
-		
-    	var trunkQuery1 = new Parse.Query("Activity");
-    	trunkQuery1.equalTo('toUser',user1);
-  		trunkQuery1.equalTo('type', "addToTrip");
-  	
-  		var trunkQuery2 = new Parse.Query("Activity");
-    	trunkQuery2.equalTo('toUser',user2);
-  		trunkQuery2.equalTo('type', "addToTrip");
-  	
-  		var subQuery = Parse.Query.or(trunkQuery1,trunkQuery2);
-  		subQuery.include(['trip','trip.publicTripDetail']);
-  		subQuery.include(['trip','trip.creator']);
-  		subQuery.exists('fromUser');
-  		subQuery.exists('toUser');
-  		subQuery.exists('trip');
-  		subQuery.descending('updatedAt');
-  		subQuery.limit = limit;
+  return query.find({sessionToken: token})
+  .then(activities => {
+    console.log('Found %d trunks for %s', activities.length, user.id);
 
-		var token = user.getSessionToken();
-  	
-  	var mutualTrips = new Array();
-  	var user2Trips = new Array();
-  	
-  	subQuery.find({ sessionToken: token }).then(function (objects) {	
-		for (var i = 0; i < objects.length; i++) {
-			var object = objects[i];
-			var trip = object.get("trip")
-			if(trip){
-				var publicTrip = trip.get("publicTripDetail");
-				var user = request.user;
-// 				if(publicTrip || Parse.User.current().id == trip.get("creator").id){
-				if(publicTrip || user.id == trip.get("creator").id){
-				for(var x = 0; x < objects.length; x++) {
-					var compareObject = objects[x];
-					var compareTrip = compareObject.get("trip")
-					if(compareTrip){
-						var tripId = trip.id;
-					if(!containsObject(tripId,tripIds)){
-						if(object.get("fromUser") != compareObject.get("fromUser")){
-							if(trip.id == compareTrip.id){
-								if(trip.get("creator")){
-									tripIds.push(tripId);
-									var acl = trip.get("ACL");
-// 									if(acl.getReadAccess(Parse.User.current()) || acl.getPublicReadAccess()){
-									if(acl.getReadAccess(user) || acl.getPublicReadAccess()){
-										//add object to trunk array
-										trunks.push(object);
-									}
-								}
-							}					
-						}
-					}
-					}else{
-						console.log("The activity " + object.id + " is missing it's Trip (while comparing)");
-					}
-				}
-				}else{
-					console.log("The trip ("+trip.get('name')+" in "+trip.get('city')+") is missing it's publicTripDetail");
-				}
-			}else{
-				console.log("The activity " + object.id + " is missing it's Trip");
-			}
-		}
-		trunks.sort(date_sort_desc);
-		callback.success(trunks);  	
-  	}, function (error) {
-		callback.error("Error with getMutualTrunks subQuery.find()"+error);
-    	});
-	
+    // We have to use map not pluck because activity is a Parse.Object,
+    // so we need to call activity.get('trip') instead of just plucking activity.trip
+    const trunks = _.map(activities, activity => {
+      return activity.get('trip');
+    });
+    const mutualQuery = new Parse.Query('Activity');
+    mutualQuery.equalTo('toUser', toUser);
+    mutualQuery.equalTo('type', 'addToTrip');
+    mutualQuery.containedIn('trip', trunks); // find trunks that are mutual only.
+    mutualQuery.exists('fromUser');
+    mutualQuery.exists('toUser');
+    mutualQuery.exists('trip');
+    mutualQuery.include('trip').include('trip.publicTripDetail').include('trip.creator');
+    mutualQuery.descending('updatedAt');
+    mutualQuery.limit(limit ? limit : 100); // Set the limit to the passed one or 100.
+    return mutualQuery.find({useMasterKey: true});
+  });
 }
+
+
+/**
+ * Accepts params "user1" and "limit".
+ * Returns the mutual trunks for the request.user and user1, limited to the passed limit (or 100);
+ */
+Parse.Cloud.define('queryForMutualTrunks', function(request, response) {
+  const limit = parseInt(request.params.limit, 10);
+  const user = request.user;
+  const toUser = new Parse.User();
+  toUser.id = request.params.user1;
+
+  mutualTrunks(user, toUser, limit, user.getSessionToken())
+  .then(activities => {
+    console.log('Found %d mutual trunks for %s and $s', activities.length, user.id, toUser.id);
+    response.success(activities);
+  })
+  .catch(err => {
+    console.error('Error in queryForMutualTrunks: %s', err.message);
+    response.error(err);
+  });
+
+});
 
 function containsObject(obj, list) {
     var i;
