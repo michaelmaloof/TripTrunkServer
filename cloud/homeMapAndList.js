@@ -141,9 +141,16 @@ function getTrunksForUser(limit,skip,latitude,longitude,user,callback) {
     		});
 }
 
-
+/**
+ * Gets the mutual addToTrip Activities for 2 users.
+ * Activity.trip, activity.trip.publicTripDetail, and activity.trip.creator are all included in the response.
+ *
+ * Requires a sessionToken for finding activities for the currentUser.
+ *
+ * Returns a Promise with the mutual Activity objects.
+ */
 function mutualTrunks(user, toUser, limit, token) {
-  // 1) Get the User's trunks
+  // Get the User's trunks
   const query = new Parse.Query('Activity');
   query.equalTo('toUser', user);
   query.equalTo('type', 'addToTrip');
@@ -158,6 +165,8 @@ function mutualTrunks(user, toUser, limit, token) {
     const trunks = _.map(activities, activity => {
       return activity.get('trip');
     });
+
+    // Now get the toUser's trunks that are mutual
     const mutualQuery = new Parse.Query('Activity');
     mutualQuery.equalTo('toUser', toUser);
     mutualQuery.equalTo('type', 'addToTrip');
