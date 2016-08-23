@@ -138,7 +138,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
     }
     return Promise.resolve();
   })
-  .then(() => Promise.all(_.each(newMembers, user => {
+  .then(() => Promise.all(_.map(newMembers, user => {
     // Create an Activity for addToTrip
     const Activity = Parse.Object.extend('Activity');
     const activity = new Activity();
@@ -151,7 +151,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
     activity.set('longitude', longitude);
 
     const acl = new Parse.ACL(fromUser);
-    acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
+    acl.setPublicReadAccess(true); // Initially, we set up the Activity to be publicly readable
     acl.setWriteAccess(user, true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
     acl.setWriteAccess(creator, true);
     activity.setACL(acl);

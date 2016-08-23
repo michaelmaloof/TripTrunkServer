@@ -15,6 +15,7 @@ require('./homeMapAndList.js');
 require('./addToTrip');
 require('./likePhoto');
 require('./feed');
+require('./v2/privacy');
 
 // require('./databaseFunctions.js');
 

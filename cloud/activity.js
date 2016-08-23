@@ -248,6 +248,8 @@ var addToFriendRole = function(fromUserId, toUserId, sessionToken) {
  * BEFORE SAVE - ACTIVITY
  */
 Parse.Cloud.beforeSave('Activity', function(request, response) {
+  if (request.object.existed()) return response.success();
+
   const fromUser = request.object.get('fromUser');
   const toUser = request.object.get('toUser');
   const activity = request.object;

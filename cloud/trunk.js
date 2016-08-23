@@ -2,11 +2,12 @@
  * BEFORE SAVE
  */
 Parse.Cloud.beforeSave('Trip', function(request, response) {
+  if (request.object.existed()) return response.success();
 
   const trunk = request.object;
 
-// If the trip is private, we need to REMOVE the friendsOf_ role on the Trip's ACL - the app is setting it to READ.
-// This fixes an issue that's happening because of a bug in the app.
+  // If the trip is private, we need to REMOVE the friendsOf_ role on the Trip's ACL - the app is setting it to READ.
+  // This fixes an issue that's happening because of a bug in the app.
   if (trunk.get('isPrivate') === true) {
     const roleName = `friendsOf_${trunk.get('creator').id}`;
     console.log('BeforeSaveTrip - friendsOf role name: %s', roleName);
@@ -15,23 +16,25 @@ Parse.Cloud.beforeSave('Trip', function(request, response) {
     trunk.setACL(acl);
   }
 
-  response.success(trunk);
+  return response.success(trunk);
 
 });
 
 /*
  * AFTER SAVE
+ *
+ * Creates Trunk Members Role and sets it to the trunk
  */
 Parse.Cloud.afterSave('Trip', function(request) {
+  if (request.object.existed()) return;
+
   const sessionToken = request.user.getSessionToken();
 
   const trunk = request.object;
-  if (trunk.existed()) return; // Trunk already exists (not trunk creation) so just return
 
 	// First time trunk is being saved
 	// Set up a Role for their members.
-	// Trunk Roles are only used if a user sets their account to Private,
-	// but we set it up now so it'll be ready if they ever switch their account
+	// Trunk Member Roles are used for Photo and Trunk Permissions if a User or Trunk is private.
 
   const roleName = `trunkMembersOf_${trunk.id}`; // Unique role name
   console.log('AfterSaveTrip - trunkMembersOf role name: %s', roleName);
@@ -45,9 +48,11 @@ Parse.Cloud.afterSave('Trip', function(request) {
     console.log('Successfully saved new role: %s', roleName);
 
     // Make sure the Trunk Role is set to READ on the Trunk.
+    // We do it here not in beforeSave because we don't have the Trunk ID in beforeSave.
     const trunkACL = trunk.getACL();
     trunkACL.setRoleReadAccess(trunkRole, true);
-    // TODO: Should the trunkMembers Role get WRITE access?
+    trunkACL.setRoleWriteAccess(trunkRole, true);
+
     trunk.setACL(trunkACL);
     return trunk.save(null, {sessionToken: sessionToken});
   })
