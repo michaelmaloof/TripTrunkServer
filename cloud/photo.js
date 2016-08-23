@@ -1,57 +1,95 @@
-var _ = require("underscore");
+const _ = require('underscore');
+
+
+Parse.Cloud.beforeSave('Photo', (request, response) => {
+
+  const user = request.user;
+  const sessionToken = user.getSessionToken();
+  const photo = request.object;
+
+  return photo.get('trip')
+  .fetch({sessionToken: sessionToken})
+  .then(trip => {
+    // Set the correct permissions - we don't care what the App sent because it's probably wrong.
+
+    // Only User and Trip Creator get Write Permissions
+    const acl = new Parse.ACL(user);
+    acl.setReadAccess(trip.get('creator'), true);
+    acl.setWriteAccess(trip.get('creator'), true);
+    // Trunk members always get access
+    const trunkRole = `trunkMembersOf_${photo.get('trip').id}`;
+
+    acl.setRoleReadAccess(trunkRole, true);
+
+    // We only have Public Read on a photo if the User AND the Trip are both NOT PRIVATE
+    if (!trip.get('isPrivate') && !user.get('private')) {
+      acl.setPublicReadAccess(true);
+    }
+
+    // Public Trunk - allow Friends to see it, doesn't matter if the user is private.
+    // But this could be a private User, so we're not setting Public Read here.
+    if (!trip.get('isPrivate')) {
+      const friendsRole = `friendsOf_${user.id}`;
+      acl.setReadAccess(friendsRole, true);
+    }
+
+    photo.setACL(acl);
+    // Continue saving.
+    return response.success(photo);
+  })
+  .catch(error => {
+    return response.error('Error ensuring Photo Permissions: %s', error.message);
+  });
+});
+
 
 /**
  * AFTER SAVE
  */
 Parse.Cloud.afterSave('Photo', function(request) {
-  Parse.Cloud.useMasterKey(); // User master key because we want to update the Trip's mostRecentPhoto regardless of the ACL.
 
   // Only send push notifications for new activities
   if (request.object.existed()) {
     return;
   }
 
-  var trip = request.object.get("trip");
+  const trip = request.object.get('trip');
 
 // Ensure the trip and user objects exist, otherwise we don't want to send notifications.
   if (!trip) {
-    throw "Undefined trip. Skipping push for Photo: " + request.object.id;
-    return;
+    throw new Error('Undefined trip. Skipping push for Photo: ' + request.object.id);
   }
 
-  var user = request.object.get("user");
+  const user = request.object.get('user');
   if (!user) {
-    throw "Undefined user adding the photo. Skipping push for Photo: " + request.object.id;
-    return;
+    throw new Error('Undefined user adding the photo. Skipping push for Photo: ' + request.object.id);
   }
 
-  // Since Photo.trip is a pointer, we must first fetch the trip object
-  trip.fetch().then(function(trip) {
-
+  trip.fetch({useMasterKey: true})
+  .then(trip =>{
   /*
    * Update the Trip object
    */
-    trip.set("mostRecentPhoto", new Date());
-    trip.save();
-                    
-    var creator = trip.get("creator");
+    trip.set('mostRecentPhoto', new Date());
+    return trip.save(null, {useMasterKey: true});
+  })
+  .then(trip => {
+
+    const creator = trip.get('creator');
 
     // Create an Activity for addedPhoto
-    var Activity = Parse.Object.extend("Activity");
-    var photoActivity = new Activity();
-    photoActivity.set("type", "addedPhoto");
-    photoActivity.set("photo", request.object);
-    photoActivity.set("trip", trip);
-    photoActivity.set("fromUser", request.user);
-    photoActivity.set("toUser", creator);
-                    
-    var acl = new Parse.ACL(request.user);
-    acl.setPublicReadAccess(true);
-    acl.setWriteAccess(creator, true);
-    photoActivity.setACL(acl);
-                    
-                    
-    photoActivity.save();
+    const Activity = Parse.Object.extend('Activity');
+    const activity = new Activity();
+    activity.set('type', 'addedPhoto');
+    activity.set('photo', request.object);
+    activity.set('trip', trip);
+    activity.set('fromUser', request.user);
+    activity.set('toUser', creator);
+
+    // Set the Activity ACL to the same as the Photo so people who can't see the photo won't see the ACL.
+    activity.setACL(request.object.getACL());
+
+    return activity.save();
 
   });
 

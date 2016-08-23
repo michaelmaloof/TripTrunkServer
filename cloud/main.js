@@ -14,6 +14,7 @@ require('./pushNotifications.js');
 require('./homeMapAndList.js');
 require('./addToTrip');
 require('./likePhoto');
+require('./feed');
 
 // require('./databaseFunctions.js');
 

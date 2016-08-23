@@ -1,4 +1,4 @@
-var _ = require("underscore");
+const _ = require('underscore');
 
 /**
  * BEFORE SAVE
@@ -6,12 +6,12 @@ var _ = require("underscore");
 Parse.Cloud.beforeSave(Parse.User, function(request, response) {
 
   // Save the user's name in lowercase also so we can search easier.
-  if (request.object.get("name")) {
-    request.object.set("lowercaseName", request.object.get("name").toLowerCase())
-	request.object.set("firstNameLowercase", request.object.get("firstName").toLowerCase())
-	request.object.set("lastNameLowercase", request.object.get("lastName").toLowerCase())
+  if (request.object.get('name')) {
+    request.object.set('lowercaseName', request.object.get('name').toLowerCase());
+    request.object.set('firstNameLowercase', request.object.get('firstName').toLowerCase());
+    request.object.set('lastNameLowercase', request.object.get('lastName').toLowerCase());
   }
-  response.success();  
+  response.success();
 });
 
 
@@ -19,30 +19,31 @@ Parse.Cloud.beforeSave(Parse.User, function(request, response) {
  * AFTER SAVE
  */
 Parse.Cloud.afterSave(Parse.User, function(request, response) {
-	var user = request.object;
-	if (user.existed()) { return; } // user already exists (not account creation) so just return
+  const user = request.object;
+  if (user.existed()) return; // user already exists (not account creation) so just return
 
-		// First time user is being saved
-		// Set up a Role for their friends. 
-		// Friend Roles are only used if a user sets their account to Private, 
+  	// First time user is being saved
+  	// Set up a Role for their friends.
+  	// Friend Roles are only used if a user sets their account to Private,
     // but we set it up now so it'll be ready if they ever switch their account
 
-		var roleName = "friendsOf_" + user.id; // Unique role name
-		var acl = new Parse.ACL(user);
-		acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
-		acl.setPublicWriteAccess(true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
+  	const roleName = `friendsOf_${user.id}`; // Unique role name
+  	const acl = new Parse.ACL(user);
+  	acl.setPublicReadAccess(true); // Initially, we set up the Role to have public
+  	acl.setPublicWriteAccess(true); // We give public write access to the role also - Anyone can decide to be someone's friend (aka follow them)
 
-		// In the future, if the user makes their account Private, 
+  	// In the future, if the user makes their account Private,
     // the ACL for their role gets changed. This lets existing followers be part of
-		// the role still even though they didn't have to "request" to follow
+  	// the role still even though they didn't have to 'request' to follow
 
-		var friendRole = new Parse.Role(roleName, acl); 
-		return friendRole.save(null, {useMasterKey: true}).then(function(friendRole) {
-			console.log("Successfully saved new role: " + roleName);
-			return;
-		}, function(error) {
-			console.log("Error saving new role: " + error.description);
-		});
+  	const friendRole = new Parse.Role(roleName, acl);
+  	friendRole.save(null, {useMasterKey: true})
+    .then(friendRole => {
+      console.log('Successfully saved new role: %s', roleName);
+    })
+    .catch(error => {
+      console.log('Error saving new role: %s', error.description);
+    });
 
 });
 

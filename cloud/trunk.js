@@ -3,18 +3,19 @@
  */
 Parse.Cloud.beforeSave('Trip', function(request, response) {
 
+  const trunk = request.object;
+
 // If the trip is private, we need to REMOVE the friendsOf_ role on the Trip's ACL - the app is setting it to READ.
 // This fixes an issue that's happening because of a bug in the app.
-	var roleName = "friendsOf_" + request.object.get("creator").id;
-	console.log("BeforeSaveTrip - friendsOf role name: " + roleName);
-	if (request.object.get("isPrivate") === true) {
-	  var acl = request.object.getACL();
-	  acl.setRoleReadAccess(roleName, false);
+  if (trunk.get('isPrivate') === true) {
+    const roleName = `friendsOf_${trunk.get('creator').id}`;
+    console.log('BeforeSaveTrip - friendsOf role name: %s', roleName);
+    const acl = trunk.getACL();
+    acl.setRoleReadAccess(roleName, false);
+    trunk.setACL(acl);
+  }
 
-	  request.object.setACL(acl);
-	}
-	
-  response.success();
+  response.success(trunk);
 
 });
 
@@ -22,27 +23,37 @@ Parse.Cloud.beforeSave('Trip', function(request, response) {
  * AFTER SAVE
  */
 Parse.Cloud.afterSave('Trip', function(request) {
-	var trunk = request.object;
-	if (trunk.existed()) { return; } // Trunk already exists (not trunk creation) so just return
+  const sessionToken = request.user.getSessionToken();
 
-		// First time trunk is being saved
-		// Set up a Role for their members. 
-		// Trunk Roles are only used if a user sets their account to Private, 
-		// but we set it up now so it'll be ready if they ever switch their account
+  const trunk = request.object;
+  if (trunk.existed()) return; // Trunk already exists (not trunk creation) so just return
 
-		var roleName = "trunkMembersOf_" + trunk.id; // Unique role name
-		console.log("AfterSaveTrip - trunkMembersOf role name: " + roleName);
-		var acl = new Parse.ACL(request.user); // Only the creator of the trunk gets permission for the Role.
-		acl.setRoleReadAccess(roleName, true);
-		acl.setRoleWriteAccess(roleName, true);
+	// First time trunk is being saved
+	// Set up a Role for their members.
+	// Trunk Roles are only used if a user sets their account to Private,
+	// but we set it up now so it'll be ready if they ever switch their account
 
-		var trunkMember = new Parse.Role(roleName, acl); 
-		return trunkMember.save(null, {useMasterKey: true}).then(function(trunkRole) {
-			console.log("Successfully saved new role: " + roleName);
-			return;
-		}, function(error) {
-			console.log("Error saving new role: " + error.description);
-		});
+  const roleName = `trunkMembersOf_${trunk.id}`; // Unique role name
+  console.log('AfterSaveTrip - trunkMembersOf role name: %s', roleName);
+  const acl = new Parse.ACL(request.user); // Only the creator of the trunk gets permission for the Role.
+  acl.setRoleReadAccess(roleName, true);
+  acl.setRoleWriteAccess(roleName, true);
+
+  const trunkMember = new Parse.Role(roleName, acl);
+  trunkMember.save(null, {sessionToken: sessionToken})
+  .then(trunkRole => {
+    console.log('Successfully saved new role: %s', roleName);
+
+    // Make sure the Trunk Role is set to READ on the Trunk.
+    const trunkACL = trunk.getACL();
+    trunkACL.setRoleReadAccess(trunkRole, true);
+    // TODO: Should the trunkMembers Role get WRITE access?
+    trunk.setACL(trunkACL);
+    return trunk.save(null, {sessionToken: sessionToken});
+  })
+  .catch(error => {
+    console.log('Error saving new role: %s', error.description);
+  });
 
 });
 
