@@ -1,6 +1,9 @@
 const _ = require('underscore');
 
 
+/**
+ * BEFORE SAVE
+ */
 Parse.Cloud.beforeSave('Photo', (request, response) => {
 
   const user = request.user;
@@ -10,15 +13,15 @@ Parse.Cloud.beforeSave('Photo', (request, response) => {
   return photo.get('trip')
   .fetch({sessionToken: sessionToken})
   .then(trip => {
-    // Set the correct permissions - we don't care what the App sent because it's probably wrong.
+    // Set the correct permissions - we ignore what the App sent because it's probably wrong.
 
     // Only User and Trip Creator get Write Permissions
     const acl = new Parse.ACL(user);
     acl.setReadAccess(trip.get('creator'), true);
     acl.setWriteAccess(trip.get('creator'), true);
+
     // Trunk members always get access
     const trunkRole = `trunkMembersOf_${photo.get('trip').id}`;
-
     acl.setRoleReadAccess(trunkRole, true);
 
     // We only have Public Read on a photo if the User AND the Trip are both NOT PRIVATE
@@ -33,8 +36,9 @@ Parse.Cloud.beforeSave('Photo', (request, response) => {
       acl.setReadAccess(friendsRole, true);
     }
 
+    // Set the ACL
     photo.setACL(acl);
-    // Continue saving.
+
     return response.success(photo);
   })
   .catch(error => {
@@ -45,17 +49,17 @@ Parse.Cloud.beforeSave('Photo', (request, response) => {
 
 /**
  * AFTER SAVE
+ *
+ * Creates an Activity for addedPhoto and updates the Trip's mostRecentPhoto
  */
 Parse.Cloud.afterSave('Photo', function(request) {
 
-  // Only send push notifications for new activities
-  if (request.object.existed()) {
-    return;
-  }
+  if (request.object.existed()) return;
+
 
   const trip = request.object.get('trip');
 
-// Ensure the trip and user objects exist, otherwise we don't want to send notifications.
+  // Ensure the trip and user objects exist, otherwise we don't want to send notifications.
   if (!trip) {
     throw new Error('Undefined trip. Skipping push for Photo: ' + request.object.id);
   }
@@ -65,17 +69,13 @@ Parse.Cloud.afterSave('Photo', function(request) {
     throw new Error('Undefined user adding the photo. Skipping push for Photo: ' + request.object.id);
   }
 
-  trip.fetch({useMasterKey: true})
+  trip.fetch({useMasterKey: true}) // Use the masterKey because the person may be a member - meaning only Read permissions
   .then(trip =>{
-  /*
-   * Update the Trip object
-   */
+    // Update the Trip object
     trip.set('mostRecentPhoto', new Date());
     return trip.save(null, {useMasterKey: true});
   })
   .then(trip => {
-
-    const creator = trip.get('creator');
 
     // Create an Activity for addedPhoto
     const Activity = Parse.Object.extend('Activity');
@@ -84,13 +84,12 @@ Parse.Cloud.afterSave('Photo', function(request) {
     activity.set('photo', request.object);
     activity.set('trip', trip);
     activity.set('fromUser', request.user);
-    activity.set('toUser', creator);
+    activity.set('toUser', trip.get('creator'));
 
     // Set the Activity ACL to the same as the Photo so people who can't see the photo won't see the ACL.
     activity.setACL(request.object.getACL());
 
-    return activity.save();
-
+    return activity.save(null, {sessionToken: request.user.getSessionToken()});
   });
 
 });
@@ -98,34 +97,35 @@ Parse.Cloud.afterSave('Photo', function(request) {
 
 /**
  * BEFORE DELETE
- * 
+ *
  * Before Deleting a Photo, send a DELETE request to Cloudinary as well.
  */
 Parse.Cloud.beforeDelete('Photo', function(request, response) {
 
-  if (request.object.get("imageUrl")) {
+  if (request.object.get('imageUrl')) {
 
-    var index = request.object.get("imageUrl").lastIndexOf("/") + 1;
-    var filename = request.object.get("imageUrl").substr(index);
-    var publicId = filename.substr(0, filename.lastIndexOf('.')) || filename;
+    const index = request.object.get('imageUrl').lastIndexOf('/') + 1;
+    const filename = request.object.get('imageUrl').substr(index);
+    const publicId = filename.substr(0, filename.lastIndexOf('.')) || filename;
 
-    var url = "https://334349235853935:YZoImSo-gkdMtZPH3OJdZEOvifo@api.cloudinary.com/v1_1/triptrunk/resources/image/upload?public_ids=";
+    const url = `https://334349235853935:YZoImSo-gkdMtZPH3OJdZEOvifo@api.cloudinary.com/v1_1/triptrunk/resources/image/upload?public_ids=${publicId}`;
 
-    url = url + publicId;
 
     Parse.Cloud.httpRequest({
       method: 'DELETE',
       url: url,
       headers: {
-        'Content-Type': 'application/json;charset=utf-8'
-      }
-    }).then(function(httpResponse) {
-        console.log(httpResponse.text);
-    }, function(httpResponse) {
-      response.error("Error " + error.code + " : " + error.message + " when deleting photo from Cloudinary.");
+        'Content-Type': 'application/json;charset=utf-8',
+      },
+    })
+    .then(httpResponse => {
+      console.log(httpResponse.text);
+    })
+    .catch(httpResponse => {
+      response.error('Error ' + error.code + ' : ' + error.message + ' when deleting photo from Cloudinary.');
     });
 
-  };
+  }
   // Continue with delete no matter what
   response.success();
 
