@@ -1,6 +1,6 @@
 let initialLimit = 0;
 
-const TTUser = require('./TTUser');
+const TTUser = require('./v2/models/TTUser');
 
 
 function getTrunksForUser(limit, skip, latitude, longitude, user, callback) {
