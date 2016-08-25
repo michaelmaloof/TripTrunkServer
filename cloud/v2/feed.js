@@ -1,5 +1,4 @@
 const _ = require('underscore');
-const TTUser = require('./models/TTUser');
 /*
 @{
    @"objectIds" : followingObjectIds,

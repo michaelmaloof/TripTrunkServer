@@ -32,6 +32,8 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
     activity.setACL(acl);
     return activity.save(null, {sessionToken: sessionToken});
 
+    // TODO: Increment Like Count 
+
   })
   .then(activity => {
     response.success(activity);

@@ -98,7 +98,7 @@ function getTrunksForUser(limit,skip,latitude,longitude,user, sessionToken, call
   		trunkQuery.limit(1000); //max the limit
    		
   		if(skip){
-  			trunkQuery.skip = skip;	
+  			trunkQuery.skip(skip);	
   		}
 
   		var objects = new Array();
