@@ -13,6 +13,11 @@ require('./updateFriendRoles.js');
 require('./pushNotifications.js');
 require('./homeMapAndList.js');
 require('./addToTrip');
+
+require('./v2/feed');
+require('./v2/likePhoto');
+require('./v2/privacy');
+
 // require('./databaseFunctions.js');
 
 /*

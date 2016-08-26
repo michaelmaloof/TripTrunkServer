@@ -13,6 +13,13 @@
       "masterKey": "YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ",
       "appName": "TripTrunk-Local",
       "production": false
+    },
+    {
+      "serverURL": "http://triptrunk-server-prod.us-east-1.elasticbeanstalk.com/parse",
+      "appId": "hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI",
+      "masterKey": "YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ",
+      "appName": "TripTrunk-Production",
+      "production": true
     }
   ]
 }

@@ -7,6 +7,7 @@
  * BEFORE SAVE
  * Handles a lot of the actual logic of blocking a user - using the masterKey to force them to unfollow, etc.
  */
+// TODO: 8/23/2016 - ms - update this beforeSave for self-hosted server
 Parse.Cloud.beforeSave('Block', (request, response) => {
   Parse.Cloud.useMasterKey(); // User master key because we want to update the Trip's mostRecentPhoto regardless of the ACL.
   const currentUser = request.user;

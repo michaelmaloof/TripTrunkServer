@@ -14,6 +14,7 @@ const api = new ParseServer({
   appId: process.env.APP_ID || 'hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI',
   masterKey: process.env.MASTER_KEY || 'YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ', // Add your master key here. Keep it secret!
   serverURL: process.env.SERVER_URL || 'http://localhost:3000/parse/',  // Don't forget to change to https if needed
+  facebookAppIds: ['339286769601593'],
   verbose: 0,
   filesAdapter: new S3Adapter(
     'AKIAJCTGNVYPDOHIEYNQ',

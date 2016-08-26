@@ -7,6 +7,7 @@ var friends = new Array();
 var initialLimit = 0;
 
 Parse.Cloud.define("queryForUniqueTrunks", function(request, response) {
+  const sessionToken = request.user.getSessionToken();
 		trunks = []; //Added to clear arrays that were auto cleared on parse.com
 		trips = []; //Added to clear arrays that were auto cleared on parse.com
 		tripIds = []; //Added to clear arrays that were auto cleared on parse.com
@@ -27,19 +28,19 @@ Parse.Cloud.define("queryForUniqueTrunks", function(request, response) {
 		friends.push(friendObject);
 	}  		
 
-		getTrunksForUser(limit,skip,latitude,longitude,user, {
+		getTrunksForUser(limit,skip,latitude,longitude,user, sessionToken, {
 		success: function(returnValue) {
 			console.log("Performed first trunk query successfully");
 			//query again if we don't have as many trunks as the limit &
 			//if the limit is less than the amount in the query
 			if(trunks.length < limit && limit < initialLimit){
-				getTrunksForUser(limit,skip,latitude,longitude,user, {
+				getTrunksForUser(limit,skip,latitude,longitude,user, sessionToken, {
 				success: function(returnValue) {
 				console.log("Performed second trunk query successfully");
 					//query again if we don't have as many trunks as the limit &
 					//if the limit is less than the amount in the query
 					if(trunks.length < limit && limit < initialLimit){
-						getTrunksForUser(limit,skip,latitude,longitude,user, {
+						getTrunksForUser(limit,skip,latitude,longitude,user, sessionToken, {
 						success: function(returnValue) {
 						console.log("Performed third trunk query successfully");
 						//query again if we don't have as many trunks as the limit &
@@ -78,7 +79,7 @@ Parse.Cloud.define("queryForUniqueTrunks", function(request, response) {
   		});
 });
 
-function getTrunksForUser(limit,skip,latitude,longitude,user,callback) {
+function getTrunksForUser(limit,skip,latitude,longitude,user, sessionToken, callback) {
     	var trunkQuery = new Parse.Query("Activity");
     	if(latitude && longitude){
   			trunkQuery.equalTo('latitude',latitude);
@@ -97,12 +98,12 @@ function getTrunksForUser(limit,skip,latitude,longitude,user,callback) {
   		trunkQuery.limit(1000); //max the limit
    		
   		if(skip){
-  			trunkQuery.skip = skip;	
+  			trunkQuery.skip(skip);	
   		}
 
   		var objects = new Array();
 		//query db for trunks
-    		trunkQuery.find().then(function (objects) {
+    		trunkQuery.find({sessionToken: sessionToken}).then(function (objects) {
 			initialLimit += objects.length;
 			for (var i = 0; i < objects.length; i++) {
 				var object = objects[i];
@@ -141,9 +142,16 @@ function getTrunksForUser(limit,skip,latitude,longitude,user,callback) {
     		});
 }
 
-
+/**
+ * Gets the mutual addToTrip Activities for 2 users.
+ * Activity.trip, activity.trip.publicTripDetail, and activity.trip.creator are all included in the response.
+ *
+ * Requires a sessionToken for finding activities for the currentUser.
+ *
+ * Returns a Promise with the mutual Activity objects.
+ */
 function mutualTrunks(user, toUser, limit, token) {
-  // 1) Get the User's trunks
+  // Get the User's trunks
   const query = new Parse.Query('Activity');
   query.equalTo('toUser', user);
   query.equalTo('type', 'addToTrip');
@@ -158,6 +166,8 @@ function mutualTrunks(user, toUser, limit, token) {
     const trunks = _.map(activities, activity => {
       return activity.get('trip');
     });
+
+    // Now get the toUser's trunks that are mutual
     const mutualQuery = new Parse.Query('Activity');
     mutualQuery.equalTo('toUser', toUser);
     mutualQuery.equalTo('type', 'addToTrip');
