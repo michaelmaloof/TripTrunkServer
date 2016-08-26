@@ -10,7 +10,7 @@ const _ = require('underscore');
  * and then query all of the photos for the trunks and the addedPhoto activities and set the same role,
  * and make sure they do not have Public Read on them.
  *
- * It is a major update, so make sure it works before doing it! It has been tested on "mattschoch" and "applejacks" and appears to work.
+ * It is a major update, so make sure it works before doing it! It has been tested on "mattschoch" and "applejacks" and appears to 
  */
 
 function updatePrivacy(trunk) {
@@ -80,7 +80,7 @@ function updatePrivacy(trunk) {
 //   tripQuery.equalTo('creator', {
 //     __type: 'Pointer',
 //     className: '_User',
-//     objectId: '82yTvrtvO7',
+//     objectId: 'r7WkrlEERY',
 //   });
 //   tripQuery.find({useMasterKey: true})
 //   .then(trips => {
@@ -88,8 +88,6 @@ function updatePrivacy(trunk) {
 
 //     return Promise.all(trips.map(updatePrivacy));
 //   });
-
-
 // }, 1000);
 
 
