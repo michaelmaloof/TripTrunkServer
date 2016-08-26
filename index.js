@@ -11,8 +11,8 @@ const api = new ParseServer({
   databaseURI: process.env.DATABASE_URI || config.databaseURI,
 
   cloud: process.env.CLOUD_CODE_MAIN || __dirname + '/cloud/main.js',
-  appId: process.env.APP_ID || 'hgAFtnU5haxHqyFnupsASx6MwZmEQs0wY0E43uwI',
-  masterKey: process.env.MASTER_KEY || 'YEZtCiL9kSs1rvrAQBSaULl5JyXM4M5HhHTF24LZ', // Add your master key here. Keep it secret!
+  appId: process.env.APP_ID || config.appId,
+  masterKey: process.env.MASTER_KEY || config.masterKey, // Add your master key here. Keep it secret!
   serverURL: process.env.SERVER_URL || 'http://localhost:3000/parse/',  // Don't forget to change to https if needed
   facebookAppIds: ['339286769601593'],
   verbose: 0,
