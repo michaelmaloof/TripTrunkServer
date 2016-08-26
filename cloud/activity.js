@@ -250,14 +250,14 @@ var addToFriendRole = function(fromUserId, toUserId, sessionToken) {
 Parse.Cloud.beforeSave('Activity', function(request, response) {
   if (request.object.existed()) return response.success();
 
-  const fromUser = request.object.get('fromUser');
-  const toUser = request.object.get('toUser');
   const activity = request.object;
 
 /*
  * FOLLOW ACTIVITY FLOW
  */
   if (activity.get('type') === 'follow') {
+    const fromUser = request.object.get('fromUser');
+    const toUser = request.object.get('toUser');
     return block.allowed(toUser, fromUser, request.user.getSessionToken())
     .then(allowed => {
       // USER IS ALLOWED TO DO THIS - NOT BLOCKED.
