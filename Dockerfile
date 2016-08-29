@@ -1,5 +1,5 @@
 FROM node:onbuild
 
-ENV NODE_ENV=production SERVER_URL=http://triptrunk-server-prod.us-east-1.elasticbeanstalk.com/parse PORT=8080
+ENV NODE_ENV=development SERVER_URL=http://triptrunk-server-dev.us-east-1.elasticbeanstalk.com/parse PORT=8080
 
 EXPOSE 8080
