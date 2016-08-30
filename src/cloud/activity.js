@@ -343,8 +343,12 @@ Parse.Cloud.afterSave('Activity', function(request) {
  * (still following but can't read data). Hopefully failure doesn't occur, but we use an afterDelete to be safe.
  */
 Parse.Cloud.afterDelete('Activity', function(request) {
+  const activity = request.object;
+  const type = activity.get('type');
+  const sessionToken = request.user.getSessionToken();
+
   // If it's deleting a Follow then it's an Unfollow, so we need to remove them from that user's role as well.
-  if (request.object.get('type') === 'follow') {
+  if (type === 'follow') {
     const userToUnfollow = request.object.get('toUser');
 
     const roleName = 'friendsOf_' + userToUnfollow.id;
@@ -369,7 +373,7 @@ Parse.Cloud.afterDelete('Activity', function(request) {
 
   }
   /* REMOVE FROM TRIP */
-  else if (request.object.get('type') === 'addToTrip') {
+  else if (type === 'addToTrip') {
     const userLeaving = request.object.get('toUser');
 
     const roleName = 'trunkMembersOf_' + request.object.get('trip').id;
@@ -385,6 +389,19 @@ Parse.Cloud.afterDelete('Activity', function(request) {
     })
     .catch(error => {
       console.error('Error updating role: ' + error);
+    });
+  }
+  /* Unlike a Photo */
+  else if (type === 'like') {
+    const photo = activity.get('photo');
+    photo.fetch({sessionToken: sessionToken})
+    .then(photo => {
+      console.log('unliking photo....');
+      photo.increment('likes', -1);
+      return photo.save(null, {useMasterKey: true});
+    })
+    .catch(error => {
+      console.error('Error decrementing photo LikeCount');
     });
   }
 });

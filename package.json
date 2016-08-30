@@ -2,7 +2,7 @@
   "name": "TripTrunk",
   "version": "1.4.0",
   "description": "An example Parse API server using the parse-server module",
-  "main": "index.js",
+  "main": "src/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/ParsePlatform/parse-server-example"
@@ -18,7 +18,7 @@
     "underscore": "latest"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node ./src/index.js"
   },
   "engines": {
     "node": ">=4.3"

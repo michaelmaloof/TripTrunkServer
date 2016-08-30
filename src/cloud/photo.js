@@ -5,7 +5,6 @@ const _ = require('underscore');
  * BEFORE SAVE
  */
 Parse.Cloud.beforeSave('Photo', (request, response) => {
-  console.log(request);
   if (request.object.existed()) return response.success();
 
   const user = request.user;
