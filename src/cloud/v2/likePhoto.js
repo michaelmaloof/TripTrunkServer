@@ -12,13 +12,15 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
   const photoId = request.params.photoId;
 
   const query = new Parse.Query('Photo');
-  query.include('trip');
+  query.include('trip', 'trip.publicTripDetail');
 
   query.get(photoId, { sessionToken: sessionToken })
   .then(photo => {
 
     // Increment the photo's likeCount - Note, this will need masterKey.
     photo.increment('likes');
+    const publicTripDetail = photo.get('trip').get('publicTripDetail');
+    publicTripDetail.increment('totalLikes');
 
     // Create a new Activity for liking the photo
     const Activity = Parse.Object.extend('Activity');
@@ -39,10 +41,8 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
     return Promise.all([
       activity.save(null, {sessionToken: sessionToken}),
       photo.save(null, {useMasterKey: true}),
+      publicTripDetail.save(null, {useMasterKey: true}),
     ]);
-
-
-
   })
   .then(activity => {
     response.success('LikePhoto Success');

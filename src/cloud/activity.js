@@ -393,12 +393,20 @@ Parse.Cloud.afterDelete('Activity', function(request) {
   }
   /* Unlike a Photo */
   else if (type === 'like') {
-    const photo = activity.get('photo');
-    photo.fetch({sessionToken: sessionToken})
+    const query = new Parse.Query('Photo');
+    query.include('trip', 'trip.publicTripDetail');
+
+    query.get(activity.get('photo').id, { sessionToken: sessionToken })
     .then(photo => {
       console.log('unliking photo....');
       photo.increment('likes', -1);
-      return photo.save(null, {useMasterKey: true});
+
+      const publicTripDetail = photo.get('trip').get('publicTripDetail');
+      publicTripDetail.increment('totalLikes', -1);
+      return Promise.all([
+        photo.save(null, {useMasterKey: true}),
+        publicTripDetail.save(null, {useMasterKey: true}),
+      ]);
     })
     .catch(error => {
       console.error('Error decrementing photo LikeCount');
