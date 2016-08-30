@@ -11,15 +11,14 @@ Parse.Cloud.define('queryForActivityNotifications', function(request, response) 
   query.notEqualTo('fromUser', request.user);
   query.greaterThan('createdAt', date);
 
-  query.count({
-    success: function(count) {
-      response.success(count);
-    },
-    error: function(error) {
-      response.error(error);
-      console.log('Could not count activities: ' + error.message);
-    },
-  } );
+  query.count({sessionToken: request.user.getSessionToken()})
+  .then(count => {
+    response.success(count);
+  })
+  .catch(error => {
+    console.log('Could not count activities: ' + error.message);
+    response.error(error);
+  });
 });
 
 Parse.Cloud.define("queryForNewsFeed", function(request, response) {

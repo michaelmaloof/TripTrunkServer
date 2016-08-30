@@ -7,7 +7,7 @@
 
 Parse.Cloud.define('Activity.Like', function(request, response) {
   const user = request.user;
-  const sessionToken = user.getSessionToken();
+  const sessionToken = request.user.getSessionToken();
 
   const photoId = request.params.photoId;
 
@@ -16,7 +16,7 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
 
   query.get(photoId, { sessionToken: sessionToken })
   .then(photo => {
-
+    console.log('LIKING PHOTO %s', photoId);
     // Increment the photo's likeCount - Note, this will need masterKey.
     photo.increment('likes');
     const publicTripDetail = photo.get('trip').get('publicTripDetail');
@@ -38,11 +38,10 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
     acl.setWriteAccess(photo.get('trip').get('creator').id, true);
     activity.setACL(acl);
 
-    return Promise.all([
-      activity.save(null, {sessionToken: sessionToken}),
-      photo.save(null, {useMasterKey: true}),
-      publicTripDetail.save(null, {useMasterKey: true}),
-    ]);
+    // Save the activity
+    // This will also cause the changed linked-objects to save, so Photo and publicTripDetail will be saved
+    // Because Photo is saved, we must useMasterKey.
+    return activity.save(null, {useMasterKey: true});
   })
   .then(activity => {
     response.success('LikePhoto Success');

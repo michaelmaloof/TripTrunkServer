@@ -2,14 +2,14 @@
   "name": "TripTrunk",
   "version": "1.4.0",
   "description": "An example Parse API server using the parse-server module",
-  "main": "src/index.js",
+  "main": "./src/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/ParsePlatform/parse-server-example"
   },
   "license": "MIT",
   "dependencies": {
-    "express": "~4.11.x",
+    "express": "^4.14.0",
     "kerberos": "~0.0.x",
     "mailgun-js": "^0.7.11",
     "parse": "^1.9.0",
