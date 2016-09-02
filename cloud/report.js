@@ -10,7 +10,7 @@ const mailgun = require('mailgun-js')({
 Parse.Cloud.afterSave('ReportPhoto', (request) => {
 
   const data = {
-    to: 'mattschoch@gmail.com',
+    to: 'austinbarnard@triptrunkapp.com',
     from: 'support@triptrunkapp.com',
     subject: 'A TripTrunk Photo Was Flagged',
     text: 'A photo was reported for: ' + request.object.get('reason'),
