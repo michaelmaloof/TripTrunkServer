@@ -132,7 +132,7 @@ function alertMessage(activity, user) {
     }
     break;
   default:
-    return '';
+    return 'You have new activity!';
   }
 
   // Trim our message to 140 characters.

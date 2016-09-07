@@ -5,6 +5,29 @@
  * photoId
  */
 
+const notificationBuilder = require('../pushNotifications');
+
+// Wrapper for sending push notifications to prevent redundant code.
+function sendPush(data, toUser) {
+  const query = new Parse.Query(Parse.Installation);
+  query.equalTo('user', toUser);
+
+  console.log('sending push notification');
+  return Parse.Push.send({
+    where: query, // Set our Installation query.
+    data: data,
+  }, {
+    useMasterKey: true,
+  })
+  .then(() => {
+    console.log('Sent Push');
+    return Promise.resolve();
+  })
+  .catch(error => {
+    throw new Error('Push Error ' + error.code + ' : ' + error.message);
+  });
+}
+
 Parse.Cloud.define('Activity.Like', function(request, response) {
   const user = request.user;
   const sessionToken = request.user.getSessionToken();
@@ -44,6 +67,9 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
     return activity.save(null, {useMasterKey: true});
   })
   .then(activity => {
+    return sendPush(notificationBuilder.alertPayload(activity, user), activity.get('toUser'));
+  })
+  .then(res => {
     response.success('LikePhoto Success');
   })
   .catch(err => {
