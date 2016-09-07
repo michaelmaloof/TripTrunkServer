@@ -329,7 +329,9 @@ Parse.Cloud.afterSave('Activity', function(request) {
       return sendPush(notificationBuilder.alertPayload(activity, request.user), toUser);
     });
   }
-  else {
+  // 9/7/2016 - the Activity.Like cloud function sends the notification for Likes because it was having issues using afterSave,
+  // so we're just making sure we don't double-send this notification.
+  else if (activity.get('type') !== 'like') {
     sendPush(notificationBuilder.alertPayload(activity, request.user), toUser);
   }
 });
