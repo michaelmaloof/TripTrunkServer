@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.14.0",
+    "glob": "^7.0.6",
     "kerberos": "~0.0.x",
     "mailgun-js": "^0.7.11",
     "parse": "^1.9.0",

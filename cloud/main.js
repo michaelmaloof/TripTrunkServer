@@ -1,7 +1,16 @@
+const glob = require('glob');
+const config = require('../config');
+
 /*
  * This file is just for including all of the files needed in the app.
  */
 
+const files = glob.sync(config.root + '/cloud/v2/**/*.js');
+files.forEach((file) => {
+  require(file);
+});
+
+// Old Non-v2 files, included manually
 require('./installation.js');
 require('./activity.js');
 require('./photo.js');
@@ -13,16 +22,4 @@ require('./updateFriendRoles.js');
 require('./pushNotifications.js');
 require('./homeMapAndList.js');
 require('./addToTrip');
-
-require('./v2/feed');
-require('./v2/likePhoto');
-require('./v2/privacy');
-
 // require('./databaseFunctions.js');
-
-/*
-TODO: timeouts happen on Follows.
-Instead of using the beforeSave Activity hook, we should call a cloud Function instead, because that gives us like 10 seconds.
-The other option, is to not worry about adding roles on Follows, instead just add all Followers to the friendsOf_ role when a
-user switchings to a private account.
-*/
