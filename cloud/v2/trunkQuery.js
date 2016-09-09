@@ -41,7 +41,57 @@ exports.mutualTrunks = function(user, toUser, limit, token) {
   });
 };
 
-// Returns unique trunks...
-exports.uniqueTrunks = function() {
+/**
+ * Gets the addToTrip Activities for a list of friends
+ * Activity.trip, activity.trip.publicTripDetail, and activity.trip.creator are all included in the response.
+ *
+ * Requires a sessionToken for finding activities for the currentUser.
+ *
+ * Returns a Promise with the UNIQUE trips, contained in Activity objects.
+ * Note that since we are unique on TRIP not on ACTIVITY, we are not returning certain activities because we already have one for that Trip.
+ * TODO: Change the app to expect Trip objects returned, and then just return Trips not Activites.
+ */
+exports.uniqueTrunks = function(user, friends, latitude, longitude, limit, skip, sessionToken) {
+  const query = new Parse.Query('Activity');
 
+  if (latitude && longitude) {
+    query.equalTo('latitude', latitude);
+    query.equalTo('longitude', longitude);
+  }
+  query.equalTo('type', 'addToTrip');
+  query.containedIn('toUser', friends);
+  query.include('toUser');
+  query.include('trip', 'trip.creator', 'trip.publicTripDetail');
+  query.descending('updatedAt');
+  query.exists('trip');
+  query.exists('fromUser');
+  query.exists('toUser');
+  query.limit(1000); // max the limit
+  if (skip) query.skip(skip);
+
+  return query.find({sessionToken})
+  .then(activities => {
+
+    const uniqueTripActivities = _.chain(activities)
+    .filter(obj => {
+      // Filter by if Trip exists
+      // If the user doesn't have permission for a Private trip, then the Activity may be returned
+      // but we won't have a Trip subdoc because they don't have permission for that.
+      // This deals with old ACL permissions where Included fields get messed up.
+      const trip = obj.get('trip');
+      return trip && ( trip.get('ACL').getReadAccess(user) || trip.get('ACL').getPublicReadAccess() );
+    })
+    .uniq(obj => {
+      return obj.get('trip').id;
+    })
+    // Sort by the trip's most recent photo
+    .sortBy(obj => {
+      return obj.get('trip').get('mostRecentPhoto');
+    })
+    // Make it descending
+    .reverse()
+    .value();
+
+    return Promise.resolve(uniqueTripActivities.slice(0, limit));
+  });
 };
