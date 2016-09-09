@@ -20,6 +20,5 @@ require('./block.js');
 require('./trunk.js');
 require('./updateFriendRoles.js');
 require('./pushNotifications.js');
-require('./homeMapAndList.js');
 require('./addToTrip');
 // require('./databaseFunctions.js');
