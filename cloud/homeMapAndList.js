@@ -1,3 +1,12 @@
+/**
+ * matt schoch
+ * 9/9/2016
+ *
+ * This file is no longer needed. It has been replaced by
+ * /v2/trunkQuery.js and v2/functions/uniqueTrunks.js
+ */
+
+/*
 const _ = require('underscore');
 
 var trunks = new Array();
@@ -172,3 +181,4 @@ var date_sort_desc = function (obj1, obj2) {
   if (date1 < date2) return 1;
   return 0;
 };
+*/
