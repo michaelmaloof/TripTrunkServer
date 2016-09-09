@@ -6,7 +6,7 @@ var tripIds = new Array();
 var friends = new Array();
 var initialLimit = 0;
 
-Parse.Cloud.define("queryForUniqueTrunks", function(request, response) {
+Parse.Cloud.define("queryForUniqueTrunks-old", function(request, response) {
   const sessionToken = request.user.getSessionToken();
 		trunks = []; //Added to clear arrays that were auto cleared on parse.com
 		trips = []; //Added to clear arrays that were auto cleared on parse.com
