@@ -96,10 +96,12 @@ function getUniqueTrunks(user, friends, latitude, longitude, userLimit, skip, se
     .reverse()
     .value();
 
-    if (activities.length === 1000 && uniqueTripActivities.length < userLimit) {
+    if (activities.length === 1000 && uniqueTripActivities.length < userLimit && skip < 3000) {
       // We don't have as many activites as the user requested AND there were a full 1k activites found originally.
       // That means we need to get more Activities to get our requested Unique Trips.
-      console.log('RECURSIVE CALLLLL');
+      // NOTE: We currently limit to no more than 3000 total activities to look through, for the sake of speed on super large accounts.
+      // That is not the best solution, so it should eventually be changed (i.e. remove skip < 3000 in the if statement).
+
       // Recursively call this function, passing in the unique list we have so far.
       return getUniqueTrunks(user, friends, latitude, longitude, userLimit, skip + 1000, sessionToken, uniqueTripActivities);
 
