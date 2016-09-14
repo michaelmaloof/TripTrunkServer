@@ -12,7 +12,7 @@ Parse.Cloud.define('queryForUniqueTrunks', function(request, response) {
   const latitude = request.params.latitude;
   const longitude = request.params.longitude;
   const limit = parseInt(request.params.limit, 10);
-  const skip  = parseInt(request.params.skip, 10);
+  const skip  = request.params.skip ? parseInt(request.params.skip, 10) : 0;
   const objectIds = request.params.objectIds;
 
   // Get the objectId array into Parse Object pointers so we can use it in the query.

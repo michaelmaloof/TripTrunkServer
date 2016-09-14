@@ -51,7 +51,7 @@ exports.mutualTrunks = function(user, toUser, limit, token) {
  * Note that since we are unique on TRIP not on ACTIVITY, we are not returning certain activities because we already have one for that Trip.
  * TODO: Change the app to expect Trip objects returned, and then just return Trips not Activites.
  */
-exports.uniqueTrunks = function(user, friends, latitude, longitude, limit, skip, sessionToken) {
+function getUniqueTrunks(user, friends, latitude, longitude, userLimit, skip, sessionToken, initialActivities) {
   const query = new Parse.Query('Activity');
 
   if (latitude && longitude) {
@@ -72,7 +72,11 @@ exports.uniqueTrunks = function(user, friends, latitude, longitude, limit, skip,
   return query.find({sessionToken})
   .then(activities => {
 
-    const uniqueTripActivities = _.chain(activities)
+    // if we have a passed-in array of activites already, then we need to add that to this list.
+    // because we may be in a recursive call to get to the user-requested limit.
+    const nonUniques = initialActivities && initialActivities.length > 0 ? activities.concat(initialActivities) : activities;
+
+    const uniqueTripActivities = _.chain(nonUniques)
     .filter(obj => {
       // Filter by if Trip exists
       // If the user doesn't have permission for a Private trip, then the Activity may be returned
@@ -92,6 +96,17 @@ exports.uniqueTrunks = function(user, friends, latitude, longitude, limit, skip,
     .reverse()
     .value();
 
-    return Promise.resolve(uniqueTripActivities.slice(0, limit));
+    if (activities.length === 1000 && uniqueTripActivities.length < userLimit) {
+      // We don't have as many activites as the user requested AND there were a full 1k activites found originally.
+      // That means we need to get more Activities to get our requested Unique Trips.
+      console.log('RECURSIVE CALLLLL');
+      // Recursively call this function, passing in the unique list we have so far.
+      return getUniqueTrunks(user, friends, latitude, longitude, userLimit, skip + 1000, sessionToken, uniqueTripActivities);
+
+    }
+    // Return the array , sliced down to the user limit.
+    return Promise.resolve(uniqueTripActivities.slice(0, userLimit));
   });
-};
+}
+
+exports.uniqueTrunks = getUniqueTrunks;
