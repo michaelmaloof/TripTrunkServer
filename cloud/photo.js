@@ -57,6 +57,7 @@ Parse.Cloud.afterSave('Photo', function(request) {
 
   if (request.object.existed()) return;
 
+  const photo = request.object;
 
   const trip = request.object.get('trip');
 
@@ -90,6 +91,34 @@ Parse.Cloud.afterSave('Photo', function(request) {
     // Set the Activity ACL to the same as the Photo so people who can't see the photo won't see the ACL.
     activity.setACL(request.object.getACL());
 
+    // If the Photo has a caption, we want to add it as the first comment also.
+/*
+This was added by Matt Schoch 9/15/2016, but not used.
+This will add the Photo's Caption comment when uploading a photo -- and it works -- but due to
+how mentions currently work we have to add the Photo Caption Comment object from the iOS side.
+TODO: if mentions get rewritten onto the server, then uncomment this and remove the addComment
+functionaly from the iOS photoUpload code.
+
+    if (photo.get('caption') && photo.get('caption') !== '') {
+      const comment = new Activity();
+      comment.set('type', 'comment');
+      comment.set('photo', photo);
+      comment.set('fromUser', request.user);
+      comment.set('toUser', photo.get('user'));
+      comment.set('trip', trip);
+      comment.set('content', photo.get('caption'));
+      comment.set('isCaption', true);
+      // ACL is the same as the Photo - that should be read/write access for the owner
+      comment.setACL(request.object.getACL());
+
+      // TODO: in Activity afterSave, check for Mentions in Comments.
+
+      return Promise.all([
+        comment.save(null, {sessionToken: request.user.getSessionToken()}),
+        activity.save(null, {sessionToken: request.user.getSessionToken()}),
+      ]);
+    }
+*/
     return activity.save(null, {sessionToken: request.user.getSessionToken()});
   });
 
