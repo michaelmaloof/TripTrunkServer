@@ -14,6 +14,12 @@ Parse.Cloud.beforeSave('Photo', (request, response) => {
   return photo.get('trip')
   .fetch({sessionToken: sessionToken})
   .then(trip => {
+
+    if (!trip) {
+      // Trip Doesn't Exist??
+      throw new Error('Error saving Photo - Trip does not exist!');
+    }
+
     // Set the correct permissions - we ignore what the App sent because it's probably wrong.
 
     // Only User and Trip Creator get Write Permissions
@@ -43,7 +49,7 @@ Parse.Cloud.beforeSave('Photo', (request, response) => {
     return response.success(photo);
   })
   .catch(error => {
-    return response.error('Error ensuring Photo Permissions: %s', error.message);
+    return response.error('Error Saving Photo: %s', error.message);
   });
 });
 
