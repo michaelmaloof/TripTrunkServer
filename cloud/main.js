@@ -17,7 +17,6 @@ require('./photo.js');
 require('./user.js');
 require('./report.js');
 require('./block.js');
-require('./trunk.js');
 require('./updateFriendRoles.js');
 require('./pushNotifications.js');
 require('./addToTrip');

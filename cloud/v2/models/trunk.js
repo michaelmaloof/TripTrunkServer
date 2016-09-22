@@ -1,3 +1,4 @@
+const PlaceUpdater = require('../PlaceUpdater');
 /**
  * BEFORE SAVE
  */
@@ -56,39 +57,18 @@ Parse.Cloud.afterSave('Trip', function(request) {
     trunk.setACL(trunkACL);
     return trunk.save(null, {sessionToken: sessionToken});
   })
+  .then(trunk => {
+    // check if we have a gpID - meaning is the user using the old version of the app.
+    if (!trunk.get('gpID')) {
+      // Update the Trip from the Google API, then copy that location to the Activity objects.
+      return PlaceUpdater.updateFromGoogle(trunk).then(PlaceUpdater.copyToActivities(trunk));
+    }
+    return Promise.resolve(trunk);
+  })
   .catch(error => {
     console.log('Error saving new role: %s', error.description);
   });
 
-});
-
-/**
- * Cloud Function that updates a Trip object with lat and lon coordinates.
- * Params: {lat (number), lon (number), and trip (object)}
- */
-Parse.Cloud.define("updateTrunkLocation", function(request, response) {
-  Parse.Cloud.useMasterKey();
-
-  var lat = request.params.latitude;
-  var lon = request.params.longitude;
-  var Trip = Parse.Object.extend("Trip");
-  var trip = new Trip();
-  trip.id = request.params.tripId;
-
-  if (!lat || !lon || !trip.id) {
-  	response.error('Invalid parameters - Please try again');
-  }
-
-	trip.fetch().then(function(trip) {
-		trip.set('lat', lat);
-		trip.set('longitude', lon);
-		return trip.save();
-
-  }).then(function(trip) {
-    response.success("Success! - Trip Location Updated");
-  }, function(error) {
-    response.error(error);
-  });
 });
 
 
