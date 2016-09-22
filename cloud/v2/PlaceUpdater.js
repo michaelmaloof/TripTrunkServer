@@ -21,35 +21,33 @@ function updateFromGoogle(trip) {
   const url = JSON.parse(JSON.stringify(`https://maps.googleapis.com/maps/api/place/textsearch/json?key=AIzaSyCONAKKh7ltCHHXEWsfJDsx5kL_I_JS6dw&type=cities&query=${location}`));
 
   console.log(url);
-  return function() {
-    return new Promise((resolve, reject) => {
-      request(encodeURI(url), (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          const result = JSON.parse(body).results[0];
-          const updates = {
-            latitude: result.geometry.location.lat,
-            longitude: result.geometry.location.lng,
-            gpID: result.place_id,
-          };
+  return new Promise((resolve, reject) => {
+    request(encodeURI(url), (error, response, body) => {
+      if (!error && response.statusCode === 200) {
+        const result = JSON.parse(body).results[0];
+        const updates = {
+          latitude: result.geometry.location.lat,
+          longitude: result.geometry.location.lng,
+          gpID: result.place_id,
+        };
 
-          resolve(updates);
-        }
-        else {
-          console.log(error);
-          console.log(body);
-          reject(error);
-        }
-      });
-    })
-    .then(updates => {
-      trip.set('gpID', updates.gpID);
-      console.log(`Old Latitude: ${trip.get('lat')} - New: ${updates.latitude}`);
-      console.log(`Old Longitude: ${trip.get('longitude')} - New: ${updates.longitude}`);
-      trip.set('lat', updates.latitude);
-      trip.set('longitude', updates.longitude);
-      return trip.save(null, {useMasterKey: true});
+        resolve(updates);
+      }
+      else {
+        console.log(error);
+        console.log(body);
+        reject(error);
+      }
     });
-  };
+  })
+  .then(updates => {
+    trip.set('gpID', updates.gpID);
+    console.log(`Old Latitude: ${trip.get('lat')} - New: ${updates.latitude}`);
+    console.log(`Old Longitude: ${trip.get('longitude')} - New: ${updates.longitude}`);
+    trip.set('lat', updates.latitude);
+    trip.set('longitude', updates.longitude);
+    return trip.save(null, {useMasterKey: true});
+  });
 }
 
 /**
@@ -58,23 +56,21 @@ function updateFromGoogle(trip) {
  * @return {Promise}
  */
 function copyToActivities(trip) {
-  return function() {
-    const query = new Parse.Query('Activity');
-    query.equalTo('trip', trip);
-    query.equalTo('type', 'addToTrip');
-    return query.find({useMasterKey: true})
-    .then(activities => {
-      // for each activity, update the lat/lon/gpid with the Trip's.
-      return Promise.all(
-        activities.map(activity => {
-          activity.set('latitude', trip.get('lat'));
-          activity.set('longitude', trip.get('longitude'));
-          activity.set('gpID', trip.get('gpID'));
-          return activity.save(null, {useMasterKey: true});
-        })
-      );
-    });
-  };
+  const query = new Parse.Query('Activity');
+  query.equalTo('trip', trip);
+  query.equalTo('type', 'addToTrip');
+  return query.find({useMasterKey: true})
+  .then(activities => {
+    // for each activity, update the lat/lon/gpid with the Trip's.
+    return Promise.all(
+      activities.map(activity => {
+        activity.set('latitude', trip.get('lat'));
+        activity.set('longitude', trip.get('longitude'));
+        activity.set('gpID', trip.get('gpID'));
+        return activity.save(null, {useMasterKey: true});
+      })
+    );
+  });
 }
 
 module.exports = {
