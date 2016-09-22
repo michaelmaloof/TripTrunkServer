@@ -101,9 +101,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
   const content = request.params.content;
   const latitude = request.params.latitude;
   const longitude = request.params.longitude;
-  const Place = Parse.Object.extend('Place');
-  const place = new Place();
-  place.id = request.params.ttPlaceId;
+  const gpID = request.params.gpID;
 
   const newMembers = _.map(request.params.users, user => {
     const newUser = new Parse.User();
@@ -152,9 +150,7 @@ Parse.Cloud.define('AddMembersToTrip', function(request, response) {
     activity.set('content', content);
     activity.set('latitude', latitude);
     activity.set('longitude', longitude);
-    if (place && place.id) {
-      activity.set('place', place);
-    }
+    activity.set('gpID', gpID);
 
     const acl = new Parse.ACL(fromUser);
     acl.setPublicReadAccess(true); // Initially, we set up the Activity to be publicly readable
