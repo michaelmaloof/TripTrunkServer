@@ -61,17 +61,7 @@ Parse.Cloud.afterSave('Trip', function(request) {
     // check if we have a gpID - meaning is the user using the old version of the app.
     if (!trunk.get('gpID')) {
       // Update the Trip from the Google API, then copy that location to the Activity objects.
-
-      /**
-       * IMPORTANT!!!!
-       * Matt Schoch - 9/23/2016
-       * UNCOMMENT THIS LINE once users are no longer using Parse.com. Until then, this line should not be used
-       * because it will update locations for only the newer iOS app that hits our own server, so we'll end up
-       * with duplicates.
-       * This line MUST be uncommented as soon as the Location Update Scripts are run on the Production database
-       * and the new Google Places version of the app is out.
-       */
-      // return PlaceUpdater.updateFromGoogle(trunk).then(PlaceUpdater.copyToActivities(trunk));
+      return PlaceUpdater.updateFromGoogle(trunk).then(PlaceUpdater.copyToActivities(trunk));
     }
     return Promise.resolve(trunk);
   })
