@@ -130,6 +130,22 @@ functionaly from the iOS photoUpload code.
 
 });
 
+function deleteFromCloudinary(photo) {
+  console.log('deleting photo...');
+  const index = photo.get('imageUrl').lastIndexOf('/') + 1;
+  const filename = photo.get('imageUrl').substr(index);
+  const publicId = filename.substr(0, filename.lastIndexOf('.')) || filename;
+
+  const url = `https://334349235853935:YZoImSo-gkdMtZPH3OJdZEOvifo@api.cloudinary.com/v1_1/triptrunk/resources/image/upload?public_ids=${publicId}`;
+
+  return Parse.Cloud.httpRequest({
+    method: 'DELETE',
+    url: url,
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+    },
+  });
+}
 
 /**
  * BEFORE DELETE
@@ -139,30 +155,50 @@ functionaly from the iOS photoUpload code.
 Parse.Cloud.beforeDelete('Photo', function(request, response) {
 
   if (request.object.get('imageUrl')) {
-
-    const index = request.object.get('imageUrl').lastIndexOf('/') + 1;
-    const filename = request.object.get('imageUrl').substr(index);
-    const publicId = filename.substr(0, filename.lastIndexOf('.')) || filename;
-
-    const url = `https://334349235853935:YZoImSo-gkdMtZPH3OJdZEOvifo@api.cloudinary.com/v1_1/triptrunk/resources/image/upload?public_ids=${publicId}`;
-
-
-    Parse.Cloud.httpRequest({
-      method: 'DELETE',
-      url: url,
-      headers: {
-        'Content-Type': 'application/json;charset=utf-8',
-      },
-    })
+    deleteFromCloudinary(request.object)
     .then(httpResponse => {
       console.log(httpResponse.text);
     })
     .catch(httpResponse => {
       response.error('Error ' + error.code + ' : ' + error.message + ' when deleting photo from Cloudinary.');
     });
-
   }
   // Continue with delete no matter what
   response.success();
 
 });
+
+/**
+ * Removes a User's Photos from a Trip
+ *
+ * @param  tripId
+ * @param  user
+ */
+Parse.Cloud.define('RemovePhotosForUser', function(request, response) {
+  const sessionToken = request.user.getSessionToken();
+  console.log('removing user photos from the trip');
+  const Trip = Parse.Object.extend('Trip');
+  const trip = new Trip();
+  trip.id = request.params.tripId;
+
+  const user = request.params.user;
+
+  const query = new Parse.Query('Photo');
+  query.equalTo('trip', trip);
+  query.equalTo('user', user);
+  return query.find({sessionToken: sessionToken})
+  .then(photos => {
+    if (photos.length > 0) {
+      // Remove the photo objects, which will trigger a Cloudinary delete through the beforeDelete hook.
+      return Parse.Object.destroyAll(photos, {sessionToken: sessionToken});
+    }
+    return Promise.resolve();
+  })
+  .then(res => {
+    response.success();
+  })
+  .catch(error => {
+    response.error(error);
+  });
+});
+

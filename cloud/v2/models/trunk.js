@@ -76,27 +76,23 @@ Parse.Cloud.afterSave('Trip', function(request) {
  * Cloud Function that deletes publicTripDetail associated with Trip
  * Params: {tripId:<trip.objectId>}
  */
-Parse.Cloud.define("removePublicTripDetailsForTrip", function(request, response) {
-//   Parse.Cloud.useMasterKey();
-   
-   var Trip = Parse.Object.extend("Trip");
-   var trip = new Trip();
-   trip.id = request.params.tripId;
-                   
-    var query = new Parse.Query("PublicTripDetail");
-    query.limit(1);
-    query.equalTo('trip',trip);
-   
-    query.find({
-        success: function(details) {
-        Parse.Object.destroyAll(details).then(function() {
-            response.success("success");
-        });
-        },
-            error: function(error) {
-            response.error("Error finding posts " + error.code + ": " + error.message);
-        },
-    });
+Parse.Cloud.define('removePublicTripDetailsForTrip', function(request, response) {
+  const sessionToken = request.user.getSessionToken();
+  const Trip = Parse.Object.extend('Trip');
+  const trip = new Trip();
+  trip.id = request.params.tripId;
+  const query = new Parse.Query('PublicTripDetail');
+  query.equalTo('trip', trip);
+  query.find({sessionToken: sessionToken})
+  .then(details => {
+    return Parse.Object.destroyAll(details, {sessionToken: sessionToken});
+  })
+  .then(res => {
+    response.success('Successfully Removed PublicTripDetail');
+  })
+  .catch(error => {
+    response.error('Error removing publicTripDetail');
+  });
 });
 
 
