@@ -186,7 +186,7 @@ Parse.Cloud.define('RemovePhotosForUser', function(request, response) {
   const query = new Parse.Query('Photo');
   query.equalTo('trip', trip);
   query.equalTo('user', user);
-  return query.find({sessionToken: sessionToken})
+  query.find({sessionToken: sessionToken})
   .then(photos => {
     if (photos.length > 0) {
       // Remove the photo objects, which will trigger a Cloudinary delete through the beforeDelete hook.
