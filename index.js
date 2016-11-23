@@ -21,6 +21,16 @@ const api = new ParseServer({
     'triptrunk',
     { directAccess: true }
   ),
+    appName: 'TripTrunk',
+    publicServerURL: 'https://api.triptrunkapp.com/parse/',
+    emailAdapter: {
+        module: 'parse-server-simple-mailgun-adapter',
+            options: {
+                fromAddress: 'noreply@triptrunkapp.com',
+                apiKey: 'key-612b759d61c51fcb92c4cdbe10b36d2e',
+                domain: 'sandbox259dcac5ce094ffcbce8542ba22fda37.mailgun.org',
+            }
+    },
   push: {
     ios: [
       {
