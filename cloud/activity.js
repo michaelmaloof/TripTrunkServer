@@ -313,7 +313,7 @@ Parse.Cloud.afterSave('Activity', function(request) {
 
   // If the activity is to the user making the request (i.e. toUser and fromUser are the same), don't send a push notification
   // That happens when we add a "addToTrip" Activity for "self" to aid in querying later, so it shouldn't notify the user.
-  if (!toUser || toUser.id === request.user.id) {
+  if (!request.user || !toUser || toUser.id === request.user.id) {
     return;
   }
 
