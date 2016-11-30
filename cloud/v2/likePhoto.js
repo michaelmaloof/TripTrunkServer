@@ -67,7 +67,9 @@ Parse.Cloud.define('Activity.Like', function(request, response) {
     return activity.save(null, {useMasterKey: true});
   })
   .then(activity => {
-    return sendPush(notificationBuilder.alertPayload(activity, user), activity.get('toUser'));
+    if(user.id !== activity.get('toUser').id){
+        return sendPush(notificationBuilder.alertPayload(activity, user), activity.get('toUser'));
+    }
   })
   .then(res => {
     response.success('LikePhoto Success');
