@@ -40,7 +40,7 @@ Parse.Cloud.beforeSave('Photo', (request, response) => {
     // But this could be a private User, so we're not setting Public Read here.
     if (!trip.get('isPrivate')) {
       const friendsRole = `friendsOf_${user.id}`;
-      acl.setReadAccess(friendsRole, true);
+      acl.setRoleReadAccess(friendsRole, true);
     }
 
     // Set the ACL
