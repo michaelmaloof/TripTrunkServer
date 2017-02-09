@@ -147,6 +147,23 @@ function deleteFromCloudinary(photo) {
   });
 }
 
+/*function deleteVideoFromCloudinary(photo) {
+  console.log('deleting video...');
+  const index = photo.get('video').get('videoUrl').lastIndexOf('/') + 1;
+  const filename = photo.get('video').get('videoUrl').substr(index);
+  const publicId = filename.substr(0, filename.lastIndexOf('.')) || filename;
+
+  const url = `https://334349235853935:YZoImSo-gkdMtZPH3OJdZEOvifo@api.cloudinary.com/v1_1/triptrunk/resources/video/upload?public_ids=${publicId}`;
+
+  return Parse.Cloud.httpRequest({
+    method: 'DELETE',
+    url: url,
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+    },
+  });
+}*/
+
 /**
  * BEFORE DELETE
  *
@@ -156,6 +173,9 @@ Parse.Cloud.beforeDelete('Photo', function(request, response) {
 
   if (request.object.get('imageUrl')) {
     deleteFromCloudinary(request.object)
+        //if(request.object.get('video').get('videoUrl')){
+            //deleteVideoFromCloudinary(request.object)
+        //}
     .then(httpResponse => {
       console.log(httpResponse.text);
     })
