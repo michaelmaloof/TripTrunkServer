@@ -96,6 +96,14 @@ Parse.Cloud.afterSave('Photo', function(request) {
 
     // Set the Activity ACL to the same as the Photo so people who can't see the photo won't see the ACL.
     activity.setACL(request.object.getACL());
+    
+    //Set the Video ACL the same as the photo
+    console.log("Setting ACL for video");
+      const video = request.object.get('video');
+      video.setACL(request.object.getACL());
+      console.log("Video ACL set successfully");
+    
+    
 
     // If the Photo has a caption, we want to add it as the first comment also.
 /*
