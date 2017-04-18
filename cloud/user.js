@@ -55,6 +55,7 @@ Parse.Cloud.afterSave(Parse.User, function(request) {
  * No Parameters
  */
 Parse.Cloud.define("becomePrivate", function(request, response) {
+    console.log("running becomePrivate");
   Parse.Cloud.useMasterKey();
   const sessionToken = request.user.getSessionToken();
   var user = request.user;
@@ -119,6 +120,16 @@ Parse.Cloud.define("becomePrivate", function(request, response) {
         var acl = photo.getACL();
         acl.setPublicReadAccess(false);
         photo.setACL(acl);
+        
+        //Set the Video ACL the same as the photo
+        console.log("Setting ACL for video");
+        const video = photo.get('video');
+        if(video){
+            video.setACL(photo.getACL());
+            console.log("Video ACL set successfully");
+        }else{
+            console.log("Video ACL not set, Must be a photo.");
+        }
 
         if (counter % 100 === 0) {
           // Set the  job's progress status
@@ -166,6 +177,7 @@ Parse.Cloud.define("becomePublic", function(request, response) {
     // Query for all of the user's photo
     var query = new Parse.Query('Photo');
     query.equalTo('user', user);
+    query.include('video');
     return query.find();
 
   }).then(function(photos) {
@@ -178,6 +190,16 @@ Parse.Cloud.define("becomePublic", function(request, response) {
         var acl = photo.getACL();
         acl.setPublicReadAccess(true);
         photo.setACL(acl);
+        
+        //Set the Video ACL the same as the photo
+        console.log("Setting ACL for video");
+        const video = photo.get('video');
+        if(video){
+            video.setACL(photo.getACL());
+            console.log("Video ACL set successfully");
+        }else{
+            console.log("Video ACL not set, Must be a photo.");
+        }
 
         if (counter % 100 === 0) {
           // Set the  job's progress status

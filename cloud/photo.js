@@ -100,8 +100,12 @@ Parse.Cloud.afterSave('Photo', function(request) {
     //Set the Video ACL the same as the photo
     console.log("Setting ACL for video");
       const video = request.object.get('video');
-      video.setACL(request.object.getACL());
-      console.log("Video ACL set successfully");
+      if(video){
+            video.setACL(request.object.getACL());
+            console.log("Video ACL set successfully");
+        }else{
+            console.log("Video ACL not set, Must be a photo.");
+        }
     
     
 

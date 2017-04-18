@@ -51,6 +51,17 @@ function updatePrivacy(trunk) {
         aQuery.equalTo('photo', photo);
         aQuery.find({useMasterKey: true});
       })
+      .then(photo => {
+        //Set the Video ACL the same as the photo
+        console.log("Setting ACL for video");
+        const video = photo.get('video');
+        if(video){
+            video.setACL(photo.getACL());
+            console.log("Video ACL set successfully");
+        }else{
+            console.log("Video ACL not set, Must be a photo.");
+        }
+      })
       .then(activities => {
         if (!activities) {
           console.error('NO ACTIVITIES FOUND');
