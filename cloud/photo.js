@@ -96,6 +96,18 @@ Parse.Cloud.afterSave('Photo', function(request) {
 
     // Set the Activity ACL to the same as the Photo so people who can't see the photo won't see the ACL.
     activity.setACL(request.object.getACL());
+    
+    //Set the Video ACL the same as the photo
+    console.log("Setting ACL for video");
+      const video = request.object.get('video');
+      if(video){
+            video.setACL(request.object.getACL());
+            console.log("Video ACL set successfully");
+        }else{
+            console.log("Video ACL not set, Must be a photo.");
+        }
+    
+    
 
     // If the Photo has a caption, we want to add it as the first comment also.
 /*
@@ -147,6 +159,23 @@ function deleteFromCloudinary(photo) {
   });
 }
 
+/*function deleteVideoFromCloudinary(photo) {
+  console.log('deleting video...');
+  const index = photo.get('video').get('videoUrl').lastIndexOf('/') + 1;
+  const filename = photo.get('video').get('videoUrl').substr(index);
+  const publicId = filename.substr(0, filename.lastIndexOf('.')) || filename;
+
+  const url = `https://334349235853935:YZoImSo-gkdMtZPH3OJdZEOvifo@api.cloudinary.com/v1_1/triptrunk/resources/video/upload?public_ids=${publicId}`;
+
+  return Parse.Cloud.httpRequest({
+    method: 'DELETE',
+    url: url,
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+    },
+  });
+}*/
+
 /**
  * BEFORE DELETE
  *
@@ -156,6 +185,9 @@ Parse.Cloud.beforeDelete('Photo', function(request, response) {
 
   if (request.object.get('imageUrl')) {
     deleteFromCloudinary(request.object)
+        //if(request.object.get('video').get('videoUrl')){
+            //deleteVideoFromCloudinary(request.object)
+        //}
     .then(httpResponse => {
       console.log(httpResponse.text);
     })
