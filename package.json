@@ -15,7 +15,7 @@
     "mailgun-js": "^0.7.11",
     "parse": "^1.9.0",
     "parse-dashboard": "^1.0.15",
-    "parse-server": "^2.2.17",
+    "parse-server": "^2.6.3",
     "request": "^2.75.0",
     "underscore": "latest"
   },
