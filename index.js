@@ -2,11 +2,12 @@ const express = require('express');
 const ParseServer = require('parse-server').ParseServer;
 const S3Adapter = require('parse-server').S3Adapter;
 const path = require('path');
-
 const config = require('./config');
-// var SimpleMailgunAdapter = require('parse-server/lib/Adapters/Email/SimpleMailgunAdapter');
+//const timeout = require('connect-timeout');
 
+// var SimpleMailgunAdapter = require('parse-server/lib/Adapters/Email/SimpleMailgunAdapter');
 // let logger = require('parse-server/lib/Adapters/Logger/FileLoggerAdapter').FileLoggerAdapter;
+
 const api = new ParseServer({
   databaseURI: process.env.DATABASE_URI || config.databaseURI,
 
@@ -55,7 +56,7 @@ const api = new ParseServer({
 // javascriptKey, restAPIKey, dotNetKey, clientKey
 
 const app = express();
-
+//app.use(timeout('240000'))
 // Serve the Parse API on the /parse URL prefix
 const mountPath = process.env.PARSE_MOUNT || '/parse';
 app.use(mountPath, api);
