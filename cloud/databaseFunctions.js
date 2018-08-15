@@ -74,6 +74,104 @@ Parse.Cloud.define("copyColumnLowercaseUsernameToUsername", function(request, re
 
 });
 
+Parse.Cloud.define("saveUserToIncludeHometownGeoPoint", function(request, response) {
+ 	var latitude = request.params.latitude;
+    var longitude = request.params.longitude;
+     var userId = request.params.userId;
+     var loc = new Parse.GeoPoint(latitude, longitude);
+ 	var query = new Parse.Query("User");
+//  			query.limit(1);
+ 			query.equalTo('objectId',userId);
+	
+	Parse.Cloud.useMasterKey();
+  	const sessionToken = request.user.getSessionToken();
+	query.find({
+		success: function(results){
+			var object = results[0];
+			object.set('hometownGeoPoint',loc);
+			object.save({sessionToken: sessionToken},{
+				success: function (object) { 
+						console.log("success");
+						response.success("user geopoint saved");
+                 }, 
+                error: function (object, error) { 
+						console.log("failed");
+						response.error(error);
+               	 }
+			});
+		},
+		error: function(error) {
+			response.error(error);
+		}
+	});
+
+});
+
+Parse.Cloud.define("copyHomeAtCreationGeoPointToTrip", function(request, response) {
+
+	var query = new Parse.Query("Trip");
+	query.limit(parseInt(request.params.limit));
+	query.doesNotExist("homeAtCreation");
+	query.exists("publicTripDetail");
+	query.include("publicTripDetail");
+	query.descending("createdAt");
+	var user = request.user;
+	
+    query.find({
+        success: function(results) {
+           for (var i = 0; i < results.length; i++) {
+					const trip = results[i];
+					const ptd = trip.get("publicTripDetail");
+					trip.set("homeAtCreation",ptd.get("homeAtCreation"));
+					trip.save(null,{ useMasterKey: true }).then(function (objects) {
+//                     			response.success("trip saved.");
+								console.log("success: homeAtCreation updated");
+                  			}, function (error) {
+//                   				response.error("Error, trip not saved: "+error.message);
+								console.log("homeAt Creation update failed");
+               	 			 });
+		  }
+		  response.success("copyHomeAtCreationGeoPointToTrip finished: "+i);
+        },
+        error: function(error) {
+			response.error(error.message);
+//             console.log("failed");
+        }
+    });
+
+});
+
+Parse.Cloud.define("setGeoPointToPublicTripForHomeAtCreation", function(request, response) {
+	var id = request.params.objectId;
+	var loc = new Parse.GeoPoint(request.params.lat, request.params.long);
+	
+	var query = new Parse.Query("Trip");
+	query.equalTo("objectId",id);
+
+	query.find({
+        success: function(results) {
+					
+					const trip = results[i];
+					trip.set("homeAtCreation",loc);
+					trip.save(null,{ useMasterKey: true }).then(function (objects) {
+                    			response.success("trip saved.");
+// 								console.log("success: homeAtCreation updated");
+                  			}, function (error) {
+                  				response.error("Error, trip not saved: "+error.message);
+// 								console.log("homeAt Creation update failed");
+               	 			 });
+		  
+		  
+        },
+        error: function(error) {
+			response.error(error.message);
+//             console.log("failed");
+        }
+    });
+});
+
+
+
 // Parse.Cloud.define("copyColumnLatitudeToLatitudeString", function(request, response) {
 // 
 // 	var copyQuery = new Parse.Query("Activity");

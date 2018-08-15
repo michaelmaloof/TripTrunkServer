@@ -61,7 +61,7 @@ Parse.Cloud.afterSave('Trip', function(request) {
     // check if we have a gpID - meaning is the user using the old version of the app.
     if (!trunk.get('gpID')) {
       // Update the Trip from the Google API, then copy that location to the Activity objects.
-      return PlaceUpdater.updateFromGoogle(trunk).then(PlaceUpdater.copyToActivities(trunk));
+      // return PlaceUpdater.updateFromGoogle(trunk).then(PlaceUpdater.copyToActivities(trunk));
     }
     return Promise.resolve(trunk);
   })

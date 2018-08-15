@@ -20,4 +20,4 @@ require('./block.js');
 require('./updateFriendRoles.js');
 require('./pushNotifications.js');
 require('./addToTrip');
-// require('./databaseFunctions.js');
+//require('./databaseFunctions.js');

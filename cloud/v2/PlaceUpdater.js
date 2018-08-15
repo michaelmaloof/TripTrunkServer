@@ -17,7 +17,7 @@ const request = require('request');
  * @return {Promise}      Trip Object that has been updated
  */
 function updateFromGoogle(trip) {
-  const location = `${trip.get('city')}, ${trip.get('state')}, ${trip.get('country')}`;
+  const location = `${trip.get('city')},${trip.get('state')},${trip.get('country')}`;
   const url = JSON.parse(JSON.stringify(`https://maps.googleapis.com/maps/api/place/textsearch/json?key=AIzaSyCONAKKh7ltCHHXEWsfJDsx5kL_I_JS6dw&type=cities&query=${location}`));
 
   console.log(url);
