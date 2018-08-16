@@ -34,13 +34,13 @@ const api = new ParseServer({
   push: {
     ios: [
       {
-        pfx: './certs/TT-APNS-Dev.p12', // Dev PFX or P12
+        pfx: './certs/TTAPNS-Development.p12', // Dev PFX or P12
         bundleId: 'com.triptrunk.TripTrunk',
         passphrase: 'TripTrunk33',
         production: false, // Dev
       },
       {
-        pfx: './certs/TT-APNS-Production.p12', // Prod PFX or P12
+        pfx: './certs/TTAPNS.p12', // Prod PFX or P12
         bundleId: 'com.triptrunk.TripTrunk',
         passphrase: 'TripTrunk33',
         production: true, // Prod
